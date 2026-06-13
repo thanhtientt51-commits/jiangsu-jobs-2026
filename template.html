@@ -240,7 +240,23 @@ const state = {
 const favorites = new Set(JSON.parse(localStorage.getItem('jsgk_fav2') || '[]'));
 function saveFavs(){localStorage.setItem('jsgk_fav2',JSON.stringify([...favorites]));}
 
+function syncStateFromDOM() {
+  state.cities.clear(); state.majors.clear(); state.education.clear();
+  state.exams.clear(); state.affiliations.clear(); state.funding.clear();
+  document.querySelectorAll('#cityFilters input:checked').forEach(cb => state.cities.add(cb._val));
+  document.querySelectorAll('#eduFilters input:checked').forEach(cb => state.education.add(cb._val));
+  document.querySelectorAll('#affilFilters input:checked').forEach(cb => state.affiliations.add(cb._val));
+  document.querySelectorAll('#fundingFilters input:checked').forEach(cb => state.funding.add(cb._val));
+  document.querySelectorAll('#majorFilters .cat-pill.active').forEach(p => state.majors.add(p._val));
+  document.querySelectorAll('#examFilters .btn.active').forEach(b => state.exams.add(b._val));
+  state.search = document.getElementById('searchInput').value.trim();
+  state.favOnly = document.getElementById('favOnly').checked;
+  state.recruitMin = parseInt(document.getElementById('recruitMin').value) || 1;
+  state.recruitMax = parseInt(document.getElementById('recruitMax').value) || STATS.maxRecruit;
+}
+
 function applyFilters(){
+  syncStateFromDOM();
   let data = ALL_DATA;
   // Type filter
   if (state.type !== 'all') data = data.filter(r => r._t === state.type);
@@ -278,7 +294,11 @@ function render(){
     const sydwCount = results.filter(r => r._t === 'sydw').length;
 
     document.getElementById('statMatch').textContent = results.length.toLocaleString();
-    document.getElementById('resultsCount').innerHTML = `共<em>${results.length.toLocaleString()}</em>个职位 (公务员${gwyCount}+事业${sydwCount})，招录<em>${totalRec}</em>人`;
+    const filterInfo = [];
+    if (state.type !== 'all') filterInfo.push('类型:' + state.type);
+    if (state.cities.size) filterInfo.push('城市:' + [...state.cities].join(','));
+    if (state.majors.size) filterInfo.push('专业:' + [...state.majors].length + '个');
+    document.getElementById('resultsCount').innerHTML = `共<em>${results.length.toLocaleString()}</em>个职位 (公务员${gwyCount}+事业${sydwCount})，招录<em>${totalRec}</em>人 <span style="font-size:.7em;color:#888">${filterInfo.length?' | 筛选: '+filterInfo.join('; '):''}</span>`;
 
     const activeCount = state.cities.size + state.majors.size + state.education.size + state.exams.size + state.affiliations.size + state.funding.size + (state.favOnly?1:0) + (state.type!=='all'?1:0);
     const badge = document.getElementById('filterBadge');
@@ -418,10 +438,7 @@ function buildFilterUI() {
     label.appendChild(cb);
     label.appendChild(document.createTextNode(c.name));
     label.appendChild(span);
-    cb.addEventListener('change', function() {
-      this.checked ? state.cities.add(this._val) : state.cities.delete(this._val);
-      onFilterChange();
-    });
+    cb.addEventListener('change', function() { render(); });
     cityEl.appendChild(label);
   });
 
@@ -434,9 +451,7 @@ function buildFilterUI() {
     const cnt = el('span', { style: 'opacity:.6;margin-left:2px', textContent: m.recruits });
     pill.appendChild(cnt);
     pill.addEventListener('click', function() {
-      this.classList.toggle('active');
-      this.classList.contains('active') ? state.majors.add(this._val) : state.majors.delete(this._val);
-      onFilterChange();
+this.classList.toggle('active'); render();
     });
     majorEl.appendChild(pill);
   });
@@ -450,10 +465,7 @@ function buildFilterUI() {
     const label = el('label', { className: 'filter-option' });
     label.appendChild(cb);
     label.appendChild(document.createTextNode(e));
-    cb.addEventListener('change', function() {
-      this.checked ? state.education.add(this._val) : state.education.delete(this._val);
-      onFilterChange();
-    });
+    cb.addEventListener('change', function() { render(); });
     eduEl.appendChild(label);
   });
 
@@ -464,9 +476,7 @@ function buildFilterUI() {
     const btn = el('button', { className: 'btn btn-outline btn-sm', textContent: e });
     btn._val = e;
     btn.addEventListener('click', function() {
-      this.classList.toggle('active');
-      this.classList.contains('active') ? state.exams.add(this._val) : state.exams.delete(this._val);
-      onFilterChange();
+this.classList.toggle('active'); render();
     });
     examEl.appendChild(btn);
   });
@@ -480,10 +490,7 @@ function buildFilterUI() {
     const label = el('label', { className: 'filter-option' });
     label.appendChild(cb);
     label.appendChild(document.createTextNode(a));
-    cb.addEventListener('change', function() {
-      this.checked ? state.affiliations.add(this._val) : state.affiliations.delete(this._val);
-      onFilterChange();
-    });
+    cb.addEventListener('change', function() { render(); });
     affilEl.appendChild(label);
   });
 
@@ -497,10 +504,7 @@ function buildFilterUI() {
     const label = el('label', { className: 'filter-option' });
     label.appendChild(cb);
     label.appendChild(document.createTextNode(f));
-    cb.addEventListener('change', function() {
-      this.checked ? state.funding.add(this._val) : state.funding.delete(this._val);
-      onFilterChange();
-    });
+    cb.addEventListener('change', function() { render(); });
     fundEl.appendChild(label);
   });
 
