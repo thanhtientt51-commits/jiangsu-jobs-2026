@@ -107,6 +107,32 @@ tr.expanded td{background:#f0f4ff}
 .filter-toggle{display:none;width:100%;padding:10px;background:var(--primary);color:#fff;border:0;border-radius:var(--radius);font-size:.83em;font-weight:700;cursor:pointer;margin-bottom:8px}
 .filter-toggle .badge-count{background:var(--accent);padding:1px 6px;border-radius:8px;font-size:.78em;margin-left:5px}
 
+/* Contact side bars */
+.contact-left,.contact-right{position:fixed;top:50%;transform:translateY(-50%);z-index:50;writing-mode:vertical-lr;letter-spacing:3px;font-size:.75em;font-weight:600;background:var(--primary);color:#fff;padding:16px 10px;border-radius:0 8px 8px 0;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.15);transition:.2s;text-decoration:none;display:flex;align-items:center;gap:8px}
+.contact-left{left:0}.contact-right{right:0;writing-mode:vertical-rl;border-radius:8px 0 0 8px}
+.contact-left:hover,.contact-right:hover{background:var(--primary-light);padding:20px 12px}
+.contact-icon{font-size:1.3em}
+
+/* Floating inquiry button */
+.float-inquiry{position:fixed;bottom:24px;right:24px;z-index:200;background:var(--accent);color:#fff;padding:14px 20px;border-radius:28px;font-weight:700;font-size:.85em;cursor:pointer;border:0;box-shadow:0 4px 20px rgba(196,18,48,.35);transition:.2s;display:flex;align-items:center;gap:8px;animation:pulse 2s infinite}
+.float-inquiry:hover{transform:scale(1.05);box-shadow:0 6px 28px rgba(196,18,48,.5)}
+@keyframes pulse{0%,100%{box-shadow:0 4px 20px rgba(196,18,48,.35)}50%{box-shadow:0 4px 32px rgba(196,18,48,.6)}}
+
+/* WeChat modal */
+.wx-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:300;justify-content:center;align-items:center}
+.wx-modal.show{display:flex}
+.wx-card{background:#fff;border-radius:16px;padding:30px;text-align:center;max-width:360px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.3)}
+.wx-card h3{font-size:1.1em;margin-bottom:8px}
+.wx-card .wxid{font-size:1.3em;font-weight:800;color:var(--primary);background:#f0f4ff;padding:10px 20px;border-radius:8px;margin:16px 0;letter-spacing:1px;user-select:all}
+.wx-card .tip{font-size:.78em;color:var(--text-secondary);margin-bottom:12px}
+.wx-card .btn-copy{background:var(--accent);color:#fff;border:0;padding:8px 24px;border-radius:20px;font-weight:700;cursor:pointer;font-size:.85em}
+.wx-card .btn-close{background:0;border:0;color:var(--text-secondary);font-size:.8em;cursor:pointer;margin-top:12px;display:block;width:100%}
+
+@media(max-width:768px){
+  .contact-left,.contact-right{display:none}
+  .float-inquiry{bottom:16px;right:12px;padding:12px 16px;font-size:.75em}
+}
+
 @media(max-width:768px){
   .layout{grid-template-columns:1fr}
   .sidebar{position:fixed;top:80px;left:0;right:0;bottom:0;z-index:99;transform:translateX(-100%);transition:.25s;max-height:none;overflow-y:auto}
@@ -222,6 +248,30 @@ tr.expanded td{background:#f0f4ff}
     </div>
     <div class="card-list" id="cardList"></div>
   </main>
+</div>
+
+<!-- Contact Side Bars -->
+<a class="contact-left" title="添加微信咨询" onclick="showWechat()">
+  <span class="contact-icon">💬</span> 添加微信
+</a>
+<a class="contact-right" title="添加微信咨询" onclick="showWechat()">
+  <span class="contact-icon">📱</span> KOl_Rabbit
+</a>
+
+<!-- Floating Inquiry Button -->
+<button class="float-inquiry" onclick="showWechat()">
+  💬 在线咨询
+</button>
+
+<!-- WeChat Modal -->
+<div class="wx-modal" id="wxModal" onclick="if(event.target===this)hideWechat()">
+  <div class="wx-card">
+    <h3>添加微信咨询</h3>
+    <div class="tip">复制微信号添加好友</div>
+    <div class="wxid" id="wxId">KOl_Rabbit</div>
+    <button class="btn-copy" onclick="copyWechat()">📋 复制微信号</button>
+    <button class="btn-close" onclick="hideWechat()">关闭</button>
+  </div>
 </div>
 
 <div style="text-align:center;padding:14px;color:var(--text-secondary);font-size:.66em">
@@ -562,6 +612,9 @@ function exportToExcel(){
 }
 
 function copyShareLink(){updateHash();navigator.clipboard.writeText(location.href).then(()=>alert('链接已复制！')).catch(()=>prompt('复制链接：',location.href));}
+function showWechat(){document.getElementById('wxModal').classList.add('show');}
+function hideWechat(){document.getElementById('wxModal').classList.remove('show');}
+function copyWechat(){navigator.clipboard.writeText('KOl_Rabbit').then(()=>{alert('微信号已复制：KOl_Rabbit\n\n打开微信添加好友即可');hideWechat();}).catch(()=>{prompt('请手动复制微信号：','KOl_Rabbit');});}
 
 window.addEventListener('DOMContentLoaded',()=>{
   if(!ALL_DATA||!ALL_DATA.length){document.getElementById('loadingMsg').innerHTML='<div class="empty">数据加载失败</div>';return;}
