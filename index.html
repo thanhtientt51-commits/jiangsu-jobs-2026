@@ -388,9 +388,9 @@ function resetFilters() {
   state.favOnly=false; state.sortBy=null; state.sortAsc=true; state.type='all';
   document.getElementById('searchInput').value=''; document.getElementById('favOnly').checked=false;
   document.getElementById('recruitMin').value=1; document.getElementById('recruitMax').value=STATS.maxRecruit;
-  document.querySelectorAll('#cityFilters input,#eduFilters input,#affilFilters input,#fundingFilters input').forEach(cb=>cb.checked=false);
-  document.querySelectorAll('#examFilters .btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('#majorFilters .cat-pill').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#cityFilters input[data-filter=city],#eduFilters input[data-filter=edu],#affilFilters input[data-filter=affil],#fundingFilters input[data-filter=funding]').forEach(cb=>cb.checked=false);
+  document.querySelectorAll('#examFilters [data-filter=exam]').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#majorFilters [data-filter=major]').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
   document.querySelector('.type-btn[data-type="all"]').classList.add('active');
   document.getElementById('fundingSection').style.display='';
@@ -400,26 +400,57 @@ function resetFilters() {
 function filterCategories(q) { document.querySelectorAll('#majorFilters .cat-pill').forEach(p=>{p.style.display=!q||p.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';}); }
 
 function buildFilterUI() {
-  document.getElementById('cityFilters').innerHTML = STATS.cities.map(c=>`<label class="filter-option"><input type="checkbox" value="${c.name}" onchange="toggleCity('${c.name.replace(/'/g,"\\'")}',this.checked)">${c.name}<span class="count">${c.recruits}</span></label>`).join('');
-  document.getElementById('majorFilters').innerHTML = STATS.majorCategories.slice(0,35).map(m=>`<span class="cat-pill" data-major="${m.name}" onclick="toggleMajor('${m.name.replace(/'/g,"\\'")}',this)">${m.name}<span style="opacity:.6;margin-left:2px">${m.recruits}</span></span>`).join('');
-  document.getElementById('eduFilters').innerHTML = STATS.educationLevels.map(e=>`<label class="filter-option"><input type="checkbox" value="${e}" onchange="toggleEdu('${e.replace(/'/g,"\\'")}',this.checked)">${e}</label>`).join('');
-  document.getElementById('examFilters').innerHTML = STATS.examCategories.map(e=>`<button class="btn btn-outline btn-sm" onclick="toggleExam('${e}',this)">${e}</button>`).join('');
-  document.getElementById('affilFilters').innerHTML = STATS.affiliations.map(a=>`<label class="filter-option"><input type="checkbox" value="${a}" onchange="toggleAffil('${a.replace(/'/g,"\\'")}',this.checked)">${a}</label>`).join('');
-  // Funding sources
+  document.getElementById('cityFilters').innerHTML = STATS.cities.map((c,i)=>`<label class="filter-option"><input type="checkbox" value="${c.name.replace(/"/g,'&quot;')}" data-filter="city">${c.name}<span class="count">${c.recruits}</span></label>`).join('');
+  document.getElementById('majorFilters').innerHTML = STATS.majorCategories.slice(0,35).map(m=>`<span class="cat-pill" data-major="${m.name.replace(/"/g,'&quot;')}" data-filter="major">${m.name}<span style="opacity:.6;margin-left:2px">${m.recruits}</span></span>`).join('');
+  document.getElementById('eduFilters').innerHTML = STATS.educationLevels.map(e=>`<label class="filter-option"><input type="checkbox" value="${e.replace(/"/g,'&quot;')}" data-filter="edu">${e}</label>`).join('');
+  document.getElementById('examFilters').innerHTML = STATS.examCategories.map(e=>`<button class="btn btn-outline btn-sm" data-exam="${e}" data-filter="exam">${e}</button>`).join('');
+  document.getElementById('affilFilters').innerHTML = STATS.affiliations.map(a=>`<label class="filter-option"><input type="checkbox" value="${a.replace(/"/g,'&quot;')}" data-filter="affil">${a}</label>`).join('');
   const funds = [...new Set(ALL_DATA.map(r=>r._fund).filter(Boolean))].sort();
-  document.getElementById('fundingFilters').innerHTML = funds.map(f=>`<label class="filter-option"><input type="checkbox" value="${f}" onchange="toggleFunding('${f.replace(/'/g,"\\'")}',this.checked)">${f}</label>`).join('');
+  document.getElementById('fundingFilters').innerHTML = funds.map(f=>`<label class="filter-option"><input type="checkbox" value="${f.replace(/"/g,'&quot;')}" data-filter="funding">${f}</label>`).join('');
   document.getElementById('recruitMax').value = STATS.maxRecruit;
-  // Update total stats
   document.getElementById('statPos').textContent = STATS.totalPositions.toLocaleString();
   document.getElementById('statRec').textContent = STATS.totalRecruits.toLocaleString();
 }
 
-function toggleCity(v,ok){ok?state.cities.add(v):state.cities.delete(v);onFilterChange();}
-function toggleMajor(v,el){el.classList.toggle('active');el.classList.contains('active')?state.majors.add(v):state.majors.delete(v);onFilterChange();}
-function toggleEdu(v,ok){ok?state.education.add(v):state.education.delete(v);onFilterChange();}
-function toggleExam(v,el){el.classList.toggle('active');el.classList.contains('active')?state.exams.add(v):state.exams.delete(v);onFilterChange();}
-function toggleAffil(v,ok){ok?state.affiliations.add(v):state.affiliations.delete(v);onFilterChange();}
-function toggleFunding(v,ok){ok?state.funding.add(v):state.funding.delete(v);onFilterChange();}
+// Event delegation for all filters
+document.addEventListener('click', function(e) {
+  const target = e.target;
+  // Major pills
+  if (target.closest('[data-filter="major"]')) {
+    const el = target.closest('[data-filter="major"]');
+    const v = el.dataset.major;
+    el.classList.toggle('active');
+    el.classList.contains('active') ? state.majors.add(v) : state.majors.delete(v);
+    onFilterChange();
+  }
+  // Exam buttons
+  if (target.closest('[data-filter="exam"]')) {
+    const el = target.closest('[data-filter="exam"]');
+    const v = el.dataset.exam;
+    el.classList.toggle('active');
+    el.classList.contains('active') ? state.exams.add(v) : state.exams.delete(v);
+    onFilterChange();
+  }
+});
+
+document.addEventListener('change', function(e) {
+  const target = e.target;
+  if (target.dataset.filter === 'city') {
+    target.checked ? state.cities.add(target.value) : state.cities.delete(target.value);
+    onFilterChange();
+  } else if (target.dataset.filter === 'edu') {
+    target.checked ? state.education.add(target.value) : state.education.delete(target.value);
+    onFilterChange();
+  } else if (target.dataset.filter === 'affil') {
+    target.checked ? state.affiliations.add(target.value) : state.affiliations.delete(target.value);
+    onFilterChange();
+  } else if (target.dataset.filter === 'funding') {
+    target.checked ? state.funding.add(target.value) : state.funding.delete(target.value);
+    onFilterChange();
+  }
+});
+
+// All filter toggles now handled by event delegation in buildFilterUI
 
 function updateHash(){
   const p=[];
@@ -444,10 +475,10 @@ function loadHash(){
   if(p.get('fav'))state.favOnly=true;
   if(p.get('type')){state.type=p.get('type');}
   setTimeout(()=>{
-    document.querySelectorAll('#cityFilters input').forEach(cb=>{if(state.cities.has(cb.value))cb.checked=true;});
-    document.querySelectorAll('#majorFilters .cat-pill').forEach(p=>{if(state.majors.has(p.dataset.major))p.classList.add('active');});
-    document.querySelectorAll('#eduFilters input').forEach(cb=>{if(state.education.has(cb.value))cb.checked=true;});
-    document.querySelectorAll('#examFilters .btn').forEach(b=>{if(state.exams.has(b.textContent.trim()))b.classList.add('active');});
+    document.querySelectorAll('#cityFilters input[data-filter=city]').forEach(cb=>{if(state.cities.has(cb.value))cb.checked=true;});
+    document.querySelectorAll('#majorFilters [data-filter=major]').forEach(p=>{if(state.majors.has(p.dataset.major))p.classList.add('active');});
+    document.querySelectorAll('#eduFilters input[data-filter=edu]').forEach(cb=>{if(state.education.has(cb.value))cb.checked=true;});
+    document.querySelectorAll('#examFilters [data-filter=exam]').forEach(b=>{if(state.exams.has(b.dataset.exam))b.classList.add('active');});
     document.getElementById('favOnly').checked=state.favOnly;
     const tb = document.querySelector('.type-btn[data-type="'+(state.type||'all')+'"]');
     if(tb){document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));tb.classList.add('active');}
