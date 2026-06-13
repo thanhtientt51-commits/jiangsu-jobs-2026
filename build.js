@@ -29,9 +29,10 @@ const GWY_FILES = [
 ];
 
 // ============ 事业单位源文件 ============
-const SYDW_FILES = [
-  { file: 'c:/Users/Administrator/Desktop/2026年江苏省省属事业单位统一公开招聘岗位表.xls', sheet: '附件1', city: '江苏省', cityCode: '320000' },
-];
+const SYDW_DIR = 'c:/Users/Administrator/Desktop/2026年江苏省事业单位岗位表';
+
+// 省属事业单位（用专用解析器）
+const PROVINCE_SYDW_FILE = 'c:/Users/Administrator/Desktop/2026年江苏省事业单位岗位表/2026年江苏省省属事业单位统一公开招聘岗位表.xls';
 
 // ============ 公务员列名缩写 ============
 const GWY_KEY_MAP = {
@@ -185,6 +186,165 @@ function tagMajorCategories(majorStr) {
   return tags.length > 0 ? tags : [majorStr.substring(0, 30)];
 }
 
+// ============ 批量解析事业单位 Excel（自动识别列名） ============
+function parseBatchSydw(filePath, fileName) {
+  let wb;
+  try { wb = XLSX.readFile(filePath); } catch(e) { return []; }
+  const sn = wb.SheetNames[0];
+  const ws = wb.Sheets[sn];
+  const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+  if (raw.length < 3) return [];
+
+  // Find header row(s) - look for row containing key columns
+  const KEYWORDS = {
+    un: ['招聘单位', '单位名称', '名 称', '名称', '单位'],
+    pn: ['岗位名称', '职位名称', '招聘岗位'],
+    n: ['招聘人数', '拟招聘人数', '招录人数', '招考人数', '人数'],
+    ed: ['学历', '学 历', '学位'],
+    m: ['专业', '专 业'],
+    dept: ['主管部门'],
+    fund: ['经费来源', '经费'],
+    target: ['招聘对象'],
+    other: ['其他条件', '其它条件', '其他', '其它'],
+    desc: ['岗位描述', '岗位简介', '职位简介', '工作内容'],
+  };
+
+  // Detect header row
+  let headerRow = -1;
+  let headerRow2 = -1;
+  for (let i = 0; i < Math.min(6, raw.length); i++) {
+    const row = raw[i].map(c => String(c || '').replace(/\s/g, ''));
+    const hits = Object.values(KEYWORDS).filter(kws => kws.some(k => row.some(c => c.includes(k)))).length;
+    if (hits >= 2) { headerRow = i; break; }
+  }
+  if (headerRow === -1) {
+    // Try one more row
+    for (let i = 0; i < Math.min(8, raw.length); i++) {
+      const row = raw[i].map(c => String(c || '').replace(/\s/g, ''));
+      if (row.some(c => c.includes('岗位') || c.includes('专业') || c.includes('学历'))) {
+        headerRow = i; break;
+      }
+    }
+  }
+  if (headerRow === -1) return [];
+
+  // Check if next row is also a header (merged header pattern)
+  const nextRow = raw[headerRow + 1] || [];
+  const nextHasCols = nextRow.some(c => {
+    const s = String(c || '').replace(/\s/g, '');
+    return s.includes('名称') || s.includes('代码') || s.includes('学历') || s.includes('专业') || s.includes('对象') || s.includes('条件');
+  });
+  if (nextHasCols) headerRow2 = headerRow + 1;
+
+  // Build column mapping
+  const mapHeaders = (row) => {
+    const mapping = {};
+    row.forEach((c, i) => {
+      const s = String(c || '').replace(/\s/g, '');
+      for (const [key, kws] of Object.entries(KEYWORDS)) {
+        if (kws.some(k => s.includes(k))) {
+          if (!mapping[key]) mapping[key] = i;
+          break;
+        }
+      }
+    });
+    return mapping;
+  };
+
+  const map1 = mapHeaders(raw[headerRow]);
+  const map2 = headerRow2 > -1 ? mapHeaders(raw[headerRow2]) : {};
+  const colMap = { ...map1, ...map2 }; // row2 overrides row1
+
+  // Must have at least unit, position name, and recruitment count
+  if (!colMap.un || !colMap.pn || !colMap.n) return [];
+
+  // Parse data rows
+  const startRow = Math.max(headerRow, headerRow2) + 1;
+  const results = [];
+  let lastDept = '', lastUnit = '', lastFund = '';
+
+  for (let i = startRow; i < raw.length; i++) {
+    const r = raw[i];
+    let unitName = String(r[colMap.un] || '').trim();
+    let posName = String(r[colMap.pn] || '').trim();
+    let recruitCount = parseInt(r[colMap.n]) || 0;
+
+    // Fill merged cells
+    if (!unitName) unitName = lastUnit;
+    else lastUnit = unitName;
+    if (colMap.dept) {
+      const dept = String(r[colMap.dept] || '').trim();
+      if (dept) lastDept = dept;
+    }
+    if (colMap.fund) {
+      const fund = String(r[colMap.fund] || '').trim();
+      if (fund) lastFund = fund;
+    }
+
+    if (!unitName || !posName || !recruitCount) continue;
+
+    const major = colMap.m ? String(r[colMap.m] || '').trim() : '';
+    const education = colMap.ed ? String(r[colMap.ed] || '').trim() : '';
+    const other = colMap.other ? String(r[colMap.other] || '').trim() : '';
+    const target = colMap.target ? String(r[colMap.target] || '').trim() : '';
+    const desc = colMap.desc ? String(r[colMap.desc] || '').trim() : '';
+
+    // Infer city from filename
+    const cityHints = ['南京','苏州','无锡','常州','徐州','南通','连云港','淮安','盐城','扬州','镇江','泰州','宿迁','射阳','阜宁','响水','句容','扬中','如皋','东海','灌云','灌南','沭阳','泗洪','泗阳','江阴','宜兴','昆山','太仓','常熟','张家港','姑苏','吴中','吴江','相城','栖霞','雨花台','江宁','浦口','六合','溧水','高淳','鼓楼','玄武','秦淮','建邺','武进','新北','天宁','钟楼','金坛','海陵','高港','姜堰','兴化','泰兴','靖江','大丰','亭湖','盐都','洪泽','淮安','清江浦','淮阴','涟水','盱眙','金湖','广陵','邗江','江都','高邮','宝应','仪征','京口','润州','丹徒','丹阳','崇川','通州','海门','启东','海安','如东','新沂','邳州','丰县','沛县','睢宁','宿豫','宿城','赣榆','海州','连云'];
+    let cityInferred = '江苏省';
+    for (const hint of cityHints) {
+      if (fileName.includes(hint) || unitName.includes(hint)) {
+        // Map county to prefecture city
+        const countyMap = {
+          '射阳':'盐城市','阜宁':'盐城市','响水':'盐城市','大丰':'盐城市','亭湖':'盐城市','盐都':'盐城市',
+          '句容':'镇江市','扬中':'镇江市','丹徒':'镇江市','丹阳':'镇江市','京口':'镇江市','润州':'镇江市',
+          '如皋':'南通市','海安':'南通市','海门':'南通市','启东':'南通市','如东':'南通市','崇川':'南通市','通州':'南通市',
+          '东海':'连云港市','灌云':'连云港市','灌南':'连云港市','赣榆':'连云港市','海州':'连云港市','连云':'连云港市',
+          '沭阳':'宿迁市','泗洪':'宿迁市','泗阳':'宿迁市','宿豫':'宿迁市','宿城':'宿迁市',
+          '涟水':'淮安市','盱眙':'淮安市','金湖':'淮安市','洪泽':'淮安市','清江浦':'淮安市','淮阴':'淮安市','淮安':'淮安市',
+          '江阴':'无锡市','宜兴':'无锡市',
+          '昆山':'苏州市','太仓':'苏州市','常熟':'苏州市','张家港':'苏州市','姑苏':'苏州市','吴中':'苏州市','吴江':'苏州市','相城':'苏州市',
+          '兴化':'泰州市','泰兴':'泰州市','靖江':'泰州市','姜堰':'泰州市','海陵':'泰州市','高港':'泰州市',
+          '高邮':'扬州市','宝应':'扬州市','仪征':'扬州市','广陵':'扬州市','邗江':'扬州市','江都':'扬州市',
+          '新沂':'徐州市','邳州':'徐州市','丰县':'徐州市','沛县':'徐州市','睢宁':'徐州市',
+          '武进':'常州市','新北':'常州市','天宁':'常州市','钟楼':'常州市','金坛':'常州市',
+          '栖霞':'南京市','雨花台':'南京市','江宁':'南京市','浦口':'南京市','六合':'南京市','溧水':'南京市','高淳':'南京市','鼓楼':'南京市','玄武':'南京市','秦淮':'南京市','建邺':'南京市',
+        };
+        cityInferred = countyMap[hint] || hint + '市';
+        if (hint === '南京') cityInferred = '南京市';
+        if (hint === '苏州') cityInferred = '苏州市';
+        break;
+      }
+    }
+
+    const obj = {
+      a: '县',
+      ac: '',
+      an: cityInferred,
+      uc: '',
+      un: unitName,
+      pc: '',
+      pn: posName,
+      pd: desc,
+      e: '',
+      r: '',
+      n: recruitCount,
+      ed: education,
+      m: major,
+      o: (other + ' | ' + target).replace(/\s*\|\s*$/, ''),
+      _t: 'sydw',
+      _dept: lastDept,
+      _fund: lastFund,
+      _target: target,
+      _examFmt: '',
+      _contact: '',
+    };
+    results.push(obj);
+  }
+
+  return results;
+}
+
 // ============ 主流程 ============
 console.log('🔨 开始构建数据管道...\n');
 
@@ -204,15 +364,45 @@ for (const file of GWY_FILES) {
   console.log(`  ✅ 公务员 ${srcName}: ${rows.length} 职位, ${recruits} 人`);
 }
 
-// 事业单位
-for (const cfg of SYDW_FILES) {
-  if (!fs.existsSync(cfg.file)) { console.log(`  ⚠️ 跳过: ${cfg.file}`); continue; }
-  const rows = parseSydwFile(cfg.file, cfg.sheet, cfg.city, cfg.cityCode);
+// 事业单位 - 省属（专用解析器）
+if (fs.existsSync(PROVINCE_SYDW_FILE)) {
+  const rows = parseSydwFile(PROVINCE_SYDW_FILE, '附件1', '江苏省', '320000');
   const recruits = rows.reduce((s, r) => s + r.n, 0);
   rows.forEach(r => { r.mt = tagMajorCategories(r.m); r._src = '省属事业单位'; });
   allData = allData.concat(rows);
   fileStats.push({ type: '事业单位', file: '省属事业单位', positions: rows.length, recruits });
   console.log(`  ✅ 事业单位 省属: ${rows.length} 职位, ${recruits} 人`);
+}
+
+// 事业单位 - 批量文件夹
+if (fs.existsSync(SYDW_DIR)) {
+  const batchFiles = fs.readdirSync(SYDW_DIR).filter(f => f.match(/\.(xls|xlsx)$/) || f.endsWith('.xls.xls') || f.endsWith('.xlsx.xlsx'));
+  let batchTotal = 0, batchRecruits = 0, batchSkipped = 0;
+  for (const f of batchFiles) {
+    // Skip省属 file (already parsed with dedicated parser)
+    if (f.includes('省属事业单位')) continue;
+    const fp = path.join(SYDW_DIR, f);
+    try {
+      const rows = parseBatchSydw(fp, f);
+      if (rows.length === 0) { batchSkipped++; continue; }
+      const recruits = rows.reduce((s, r) => s + r.n, 0);
+      rows.forEach(r => {
+        r.mt = tagMajorCategories(r.m);
+        r._src = f.substring(0, 30);
+        // Ensure unique key
+        r.pc = 'B' + batchTotal + '_' + (rows.indexOf(r));
+      });
+      allData = allData.concat(rows);
+      batchTotal += rows.length;
+      batchRecruits += recruits;
+    } catch(e) {
+      batchSkipped++;
+    }
+  }
+  if (batchTotal > 0) {
+    fileStats.push({ type: '事业单位', file: '各市县批量导入', positions: batchTotal, recruits: batchRecruits });
+    console.log(`  ✅ 事业单位 批量: ${batchTotal} 职位, ${batchRecruits} 人 (跳过${batchSkipped}个无法解析的文件)`);
+  }
 }
 
 // ============ 去重 ============
