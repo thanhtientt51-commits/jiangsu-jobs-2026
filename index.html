@@ -412,43 +412,49 @@ function buildFilterUI() {
   document.getElementById('statRec').textContent = STATS.totalRecruits.toLocaleString();
 }
 
-// Event delegation for all filters
-document.addEventListener('click', function(e) {
-  const target = e.target;
-  // Major pills
-  if (target.closest('[data-filter="major"]')) {
-    const el = target.closest('[data-filter="major"]');
-    const v = el.dataset.major;
-    el.classList.toggle('active');
-    el.classList.contains('active') ? state.majors.add(v) : state.majors.delete(v);
-    onFilterChange();
-  }
-  // Exam buttons
-  if (target.closest('[data-filter="exam"]')) {
-    const el = target.closest('[data-filter="exam"]');
-    const v = el.dataset.exam;
-    el.classList.toggle('active');
-    el.classList.contains('active') ? state.exams.add(v) : state.exams.delete(v);
-    onFilterChange();
-  }
-});
-
-document.addEventListener('change', function(e) {
-  const target = e.target;
-  if (target.dataset.filter === 'city') {
-    target.checked ? state.cities.add(target.value) : state.cities.delete(target.value);
-    onFilterChange();
-  } else if (target.dataset.filter === 'edu') {
-    target.checked ? state.education.add(target.value) : state.education.delete(target.value);
-    onFilterChange();
-  } else if (target.dataset.filter === 'affil') {
-    target.checked ? state.affiliations.add(target.value) : state.affiliations.delete(target.value);
-    onFilterChange();
-  } else if (target.dataset.filter === 'funding') {
-    target.checked ? state.funding.add(target.value) : state.funding.delete(target.value);
-    onFilterChange();
-  }
-});
+// Direct event binding helpers
+function bindFilters() {
+  document.querySelectorAll('#cityFilters input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', function() {
+      this.checked ? state.cities.add(this.value) : state.cities.delete(this.value);
+      onFilterChange();
+    });
+  });
+  document.querySelectorAll('#eduFilters input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', function() {
+      this.checked ? state.education.add(this.value) : state.education.delete(this.value);
+      onFilterChange();
+    });
+  });
+  document.querySelectorAll('#affilFilters input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', function() {
+      this.checked ? state.affiliations.add(this.value) : state.affiliations.delete(this.value);
+      onFilterChange();
+    });
+  });
+  document.querySelectorAll('#fundingFilters input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', function() {
+      this.checked ? state.funding.add(this.value) : state.funding.delete(this.value);
+      onFilterChange();
+    });
+  });
+  document.querySelectorAll('#majorFilters .cat-pill').forEach(pill => {
+    pill.addEventListener('click', function() {
+      const v = this.dataset.major;
+      this.classList.toggle('active');
+      this.classList.contains('active') ? state.majors.add(v) : state.majors.delete(v);
+      onFilterChange();
+    });
+  });
+  document.querySelectorAll('#examFilters .btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const v = this.dataset.exam;
+      this.classList.toggle('active');
+      this.classList.contains('active') ? state.exams.add(v) : state.exams.delete(v);
+      onFilterChange();
+    });
+  });
+}
 
 // All filter toggles now handled by event delegation in buildFilterUI
 
@@ -503,7 +509,7 @@ function copyShareLink(){updateHash();navigator.clipboard.writeText(location.hre
 
 window.addEventListener('DOMContentLoaded',()=>{
   if(!ALL_DATA||!ALL_DATA.length){document.getElementById('loadingMsg').innerHTML='<div class="empty">数据加载失败</div>';return;}
-  buildFilterUI();loadHash();render();
+  buildFilterUI(); bindFilters(); loadHash(); render();
 });
 window.addEventListener('hashchange',()=>{loadHash();render();});
 document.addEventListener('click',e=>{if(window.innerWidth<=768&&!e.target.closest('.sidebar')&&!e.target.closest('.filter-toggle'))document.getElementById('sidebar').classList.remove('open');});
