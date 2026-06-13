@@ -399,80 +399,114 @@ function resetFilters() {
 
 function filterCategories(q) { document.querySelectorAll('#majorFilters .cat-pill').forEach(p=>{p.style.display=!q||p.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';}); }
 
+function el(tag, attrs, html) {
+  const e = document.createElement(tag);
+  if (attrs) Object.entries(attrs).forEach(([k,v]) => { if (v != null) e[k] = v; });
+  if (html) e.innerHTML = html;
+  return e;
+}
+
 function buildFilterUI() {
-  // 使用 insertAdjacentHTML 逐条构建，避免 innerHTML 截断
+  // ---- 城市 ----
   const cityEl = document.getElementById('cityFilters');
   cityEl.innerHTML = '';
   STATS.cities.forEach(c => {
-    const div = document.createElement('div');
-    div.className = 'filter-option';
-    div.innerHTML = `<input type="checkbox" value="${c.name.replace(/"/g,'&quot;')}" data-filter="city">${c.name}<span class="count">${c.recruits}</span>`;
-    cityEl.appendChild(div);
+    const cb = el('input', { type: 'checkbox' });
+    cb._val = c.name;
+    const label = el('label', { className: 'filter-option' });
+    const span = el('span', { className: 'count', textContent: c.recruits });
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(c.name));
+    label.appendChild(span);
+    cb.addEventListener('change', function() {
+      this.checked ? state.cities.add(this._val) : state.cities.delete(this._val);
+      onFilterChange();
+    });
+    cityEl.appendChild(label);
   });
 
+  // ---- 专业大类 ----
   const majorEl = document.getElementById('majorFilters');
   majorEl.innerHTML = '';
   STATS.majorCategories.slice(0,35).forEach(m => {
-    majorEl.insertAdjacentHTML('beforeend', `<span class="cat-pill" data-major="${m.name.replace(/"/g,'&quot;')}">${m.name}<span style="opacity:.6;margin-left:2px">${m.recruits}</span></span>`);
+    const pill = el('span', { className: 'cat-pill', textContent: m.name + ' ' });
+    pill._val = m.name;
+    const cnt = el('span', { style: 'opacity:.6;margin-left:2px', textContent: m.recruits });
+    pill.appendChild(cnt);
+    pill.addEventListener('click', function() {
+      this.classList.toggle('active');
+      this.classList.contains('active') ? state.majors.add(this._val) : state.majors.delete(this._val);
+      onFilterChange();
+    });
+    majorEl.appendChild(pill);
   });
 
+  // ---- 学历 ----
   const eduEl = document.getElementById('eduFilters');
   eduEl.innerHTML = '';
   STATS.educationLevels.forEach(e => {
-    eduEl.insertAdjacentHTML('beforeend', `<label class="filter-option"><input type="checkbox" value="${e.replace(/"/g,'&quot;')}" data-filter="edu">${e}</label>`);
+    const cb = el('input', { type: 'checkbox' });
+    cb._val = e;
+    const label = el('label', { className: 'filter-option' });
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(e));
+    cb.addEventListener('change', function() {
+      this.checked ? state.education.add(this._val) : state.education.delete(this._val);
+      onFilterChange();
+    });
+    eduEl.appendChild(label);
   });
 
-  document.getElementById('examFilters').innerHTML = STATS.examCategories.map(e=>`<button class="btn btn-outline btn-sm" data-exam="${e}">${e}</button>`).join('');
-  document.getElementById('affilFilters').innerHTML = STATS.affiliations.map(a=>`<label class="filter-option"><input type="checkbox" value="${a.replace(/"/g,'&quot;')}" data-filter="affil">${a}</label>`).join('');
+  // ---- 考试类别 ----
+  const examEl = document.getElementById('examFilters');
+  examEl.innerHTML = '';
+  STATS.examCategories.forEach(e => {
+    const btn = el('button', { className: 'btn btn-outline btn-sm', textContent: e });
+    btn._val = e;
+    btn.addEventListener('click', function() {
+      this.classList.toggle('active');
+      this.classList.contains('active') ? state.exams.add(this._val) : state.exams.delete(this._val);
+      onFilterChange();
+    });
+    examEl.appendChild(btn);
+  });
+
+  // ---- 隶属关系 ----
+  const affilEl = document.getElementById('affilFilters');
+  affilEl.innerHTML = '';
+  STATS.affiliations.forEach(a => {
+    const cb = el('input', { type: 'checkbox' });
+    cb._val = a;
+    const label = el('label', { className: 'filter-option' });
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(a));
+    cb.addEventListener('change', function() {
+      this.checked ? state.affiliations.add(this._val) : state.affiliations.delete(this._val);
+      onFilterChange();
+    });
+    affilEl.appendChild(label);
+  });
+
+  // ---- 经费来源 ----
+  const fundEl = document.getElementById('fundingFilters');
+  fundEl.innerHTML = '';
   const funds = [...new Set(ALL_DATA.map(r=>r._fund).filter(Boolean))].sort();
-  document.getElementById('fundingFilters').innerHTML = funds.map(f=>`<label class="filter-option"><input type="checkbox" value="${f.replace(/"/g,'&quot;')}" data-filter="funding">${f}</label>`).join('');
+  funds.forEach(f => {
+    const cb = el('input', { type: 'checkbox' });
+    cb._val = f;
+    const label = el('label', { className: 'filter-option' });
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(f));
+    cb.addEventListener('change', function() {
+      this.checked ? state.funding.add(this._val) : state.funding.delete(this._val);
+      onFilterChange();
+    });
+    fundEl.appendChild(label);
+  });
+
   document.getElementById('recruitMax').value = STATS.maxRecruit;
   document.getElementById('statPos').textContent = STATS.totalPositions.toLocaleString();
   document.getElementById('statRec').textContent = STATS.totalRecruits.toLocaleString();
-}
-
-// Direct event binding helpers
-function bindFilters() {
-  document.querySelectorAll('#cityFilters input[type=checkbox]').forEach(cb => {
-    cb.addEventListener('change', function() {
-      this.checked ? state.cities.add(this.value) : state.cities.delete(this.value);
-      onFilterChange();
-    });
-  });
-  document.querySelectorAll('#eduFilters input[type=checkbox]').forEach(cb => {
-    cb.addEventListener('change', function() {
-      this.checked ? state.education.add(this.value) : state.education.delete(this.value);
-      onFilterChange();
-    });
-  });
-  document.querySelectorAll('#affilFilters input[type=checkbox]').forEach(cb => {
-    cb.addEventListener('change', function() {
-      this.checked ? state.affiliations.add(this.value) : state.affiliations.delete(this.value);
-      onFilterChange();
-    });
-  });
-  document.querySelectorAll('#fundingFilters input[type=checkbox]').forEach(cb => {
-    cb.addEventListener('change', function() {
-      this.checked ? state.funding.add(this.value) : state.funding.delete(this.value);
-      onFilterChange();
-    });
-  });
-  document.querySelectorAll('#majorFilters .cat-pill').forEach(pill => {
-    pill.addEventListener('click', function() {
-      const v = this.dataset.major;
-      this.classList.toggle('active');
-      this.classList.contains('active') ? state.majors.add(v) : state.majors.delete(v);
-      onFilterChange();
-    });
-  });
-  document.querySelectorAll('#examFilters .btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const v = this.dataset.exam;
-      this.classList.toggle('active');
-      this.classList.contains('active') ? state.exams.add(v) : state.exams.delete(v);
-      onFilterChange();
-    });
-  });
 }
 
 // All filter toggles now handled by event delegation in buildFilterUI
@@ -528,7 +562,7 @@ function copyShareLink(){updateHash();navigator.clipboard.writeText(location.hre
 
 window.addEventListener('DOMContentLoaded',()=>{
   if(!ALL_DATA||!ALL_DATA.length){document.getElementById('loadingMsg').innerHTML='<div class="empty">数据加载失败</div>';return;}
-  buildFilterUI(); bindFilters(); loadHash(); render();
+  buildFilterUI(); loadHash(); render();
 });
 window.addEventListener('hashchange',()=>{loadHash();render();});
 document.addEventListener('click',e=>{if(window.innerWidth<=768&&!e.target.closest('.sidebar')&&!e.target.closest('.filter-toggle'))document.getElementById('sidebar').classList.remove('open');});
