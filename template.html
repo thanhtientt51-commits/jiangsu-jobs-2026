@@ -400,10 +400,29 @@ function resetFilters() {
 function filterCategories(q) { document.querySelectorAll('#majorFilters .cat-pill').forEach(p=>{p.style.display=!q||p.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';}); }
 
 function buildFilterUI() {
-  document.getElementById('cityFilters').innerHTML = STATS.cities.map((c,i)=>`<label class="filter-option"><input type="checkbox" value="${c.name.replace(/"/g,'&quot;')}" data-filter="city">${c.name}<span class="count">${c.recruits}</span></label>`).join('');
-  document.getElementById('majorFilters').innerHTML = STATS.majorCategories.slice(0,35).map(m=>`<span class="cat-pill" data-major="${m.name.replace(/"/g,'&quot;')}" data-filter="major">${m.name}<span style="opacity:.6;margin-left:2px">${m.recruits}</span></span>`).join('');
-  document.getElementById('eduFilters').innerHTML = STATS.educationLevels.map(e=>`<label class="filter-option"><input type="checkbox" value="${e.replace(/"/g,'&quot;')}" data-filter="edu">${e}</label>`).join('');
-  document.getElementById('examFilters').innerHTML = STATS.examCategories.map(e=>`<button class="btn btn-outline btn-sm" data-exam="${e}" data-filter="exam">${e}</button>`).join('');
+  // 使用 insertAdjacentHTML 逐条构建，避免 innerHTML 截断
+  const cityEl = document.getElementById('cityFilters');
+  cityEl.innerHTML = '';
+  STATS.cities.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'filter-option';
+    div.innerHTML = `<input type="checkbox" value="${c.name.replace(/"/g,'&quot;')}" data-filter="city">${c.name}<span class="count">${c.recruits}</span>`;
+    cityEl.appendChild(div);
+  });
+
+  const majorEl = document.getElementById('majorFilters');
+  majorEl.innerHTML = '';
+  STATS.majorCategories.slice(0,35).forEach(m => {
+    majorEl.insertAdjacentHTML('beforeend', `<span class="cat-pill" data-major="${m.name.replace(/"/g,'&quot;')}">${m.name}<span style="opacity:.6;margin-left:2px">${m.recruits}</span></span>`);
+  });
+
+  const eduEl = document.getElementById('eduFilters');
+  eduEl.innerHTML = '';
+  STATS.educationLevels.forEach(e => {
+    eduEl.insertAdjacentHTML('beforeend', `<label class="filter-option"><input type="checkbox" value="${e.replace(/"/g,'&quot;')}" data-filter="edu">${e}</label>`);
+  });
+
+  document.getElementById('examFilters').innerHTML = STATS.examCategories.map(e=>`<button class="btn btn-outline btn-sm" data-exam="${e}">${e}</button>`).join('');
   document.getElementById('affilFilters').innerHTML = STATS.affiliations.map(a=>`<label class="filter-option"><input type="checkbox" value="${a.replace(/"/g,'&quot;')}" data-filter="affil">${a}</label>`).join('');
   const funds = [...new Set(ALL_DATA.map(r=>r._fund).filter(Boolean))].sort();
   document.getElementById('fundingFilters').innerHTML = funds.map(f=>`<label class="filter-option"><input type="checkbox" value="${f.replace(/"/g,'&quot;')}" data-filter="funding">${f}</label>`).join('');
