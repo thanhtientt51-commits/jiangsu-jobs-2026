@@ -417,6 +417,43 @@ for (const r of allData) {
 if (dupCount > 0) console.log(`\n  ⚠️ 发现 ${dupCount} 条重复，已去重`);
 allData = deduped;
 
+// ============ 智能城市识别（从单位名称推断实际工作地） ============
+const CITY_PATTERNS = [
+  { pattern: /南京|江宁|溧水|高淳|浦口|六合|栖霞|雨花|鼓楼|玄武|秦淮|建邺|江北/, city: '南京市' },
+  { pattern: /无锡|江阴|宜兴|锡山|惠山|滨湖|梁溪|新吴/, city: '无锡市' },
+  { pattern: /徐州|丰县|沛县|睢宁|邳州|新沂|云龙|贾汪|泉山|铜山/, city: '徐州市' },
+  { pattern: /常州|溧阳|金坛|武进|新北|天宁|钟楼/, city: '常州市' },
+  { pattern: /苏州|昆山|太仓|常熟|张家港|吴江|吴中|姑苏|相城|虎丘|园区/, city: '苏州市' },
+  { pattern: /南通|启东|海安|如皋|如东|海门|崇川|通州/, city: '南通市' },
+  { pattern: /连云港|东海|灌云|灌南|赣榆|海州|连云(?!港)|徐圩/, city: '连云港市' },
+  { pattern: /淮安|涟水|盱眙|金湖|洪泽|清江浦|淮阴/, city: '淮安市' },
+  { pattern: /盐城|东台|建湖|射阳|阜宁|滨海|响水|大丰|亭湖|盐都/, city: '盐城市' },
+  { pattern: /扬州|仪征|高邮|宝应|邗江|广陵|江都/, city: '扬州市' },
+  { pattern: /镇江|丹阳|扬中|句容|丹徒|京口|润州/, city: '镇江市' },
+  { pattern: /泰州|兴化|泰兴|靖江|姜堰|海陵|高港/, city: '泰州市' },
+  { pattern: /宿迁|沭阳|泗洪|泗阳|宿豫|宿城|湖滨/, city: '宿迁市' },
+];
+
+function detectCity(unitName, positionDesc, originalAn) {
+  // Only reassign positions currently tagged as provincial or county level
+  if (originalAn === '江苏省' || originalAn === '省') {
+    for (const { pattern, city } of CITY_PATTERNS) {
+      if (pattern.test(unitName) || pattern.test(positionDesc)) {
+        return city;
+      }
+    }
+  }
+  return originalAn;
+}
+
+// Apply city detection
+allData.forEach(r => {
+  const detected = detectCity(r.un, r.pd, r.an);
+  if (detected !== r.an) {
+    r.an = detected;
+  }
+});
+
 // ============ 添加父级城市标签 ============
 const CITY_MAP = {
   '南京市鼓楼区':'南京市','南京市玄武区':'南京市','南京市秦淮区':'南京市','南京市建邺区':'南京市','南京市栖霞区':'南京市','南京市雨花台区':'南京市','南京市江宁区':'南京市','南京市浦口区':'南京市','南京市六合区':'南京市','南京市溧水区':'南京市','南京市高淳区':'南京市','南京市江北新区':'南京市','南京市市辖区':'南京市',

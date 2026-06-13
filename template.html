@@ -256,7 +256,6 @@ function syncStateFromDOM() {
 }
 
 function applyFilters(){
-  syncStateFromDOM();
   let data = ALL_DATA;
   // Type filter
   if (state.type !== 'all') data = data.filter(r => r._t === state.type);
@@ -288,17 +287,15 @@ let renderTimer;
 function render(){
   clearTimeout(renderTimer);
   renderTimer = setTimeout(() => {
+    syncStateFromDOM();
     const results = applyFilters();
     const totalRec = results.reduce((s,r) => s + r.n, 0);
     const gwyCount = results.filter(r => r._t === 'gwy').length;
     const sydwCount = results.filter(r => r._t === 'sydw').length;
 
     document.getElementById('statMatch').textContent = results.length.toLocaleString();
-    const filterInfo = [];
-    if (state.type !== 'all') filterInfo.push('类型:' + state.type);
-    if (state.cities.size) filterInfo.push('城市:' + [...state.cities].join(','));
-    if (state.majors.size) filterInfo.push('专业:' + [...state.majors].length + '个');
-    document.getElementById('resultsCount').innerHTML = `共<em>${results.length.toLocaleString()}</em>个职位 (公务员${gwyCount}+事业${sydwCount})，招录<em>${totalRec}</em>人 <span style="font-size:.7em;color:#888">${filterInfo.length?' | 筛选: '+filterInfo.join('; '):''}</span>`;
+    const checkedCities = [...document.querySelectorAll('#cityFilters input:checked')].map(cb=>cb._val);
+    document.getElementById('resultsCount').innerHTML = `共<em>${results.length.toLocaleString()}</em>个职位 (公务员${gwyCount}+事业${sydwCount})，招录<em>${totalRec}</em>人 <span style="font-size:.7em;color:#c41230">${checkedCities.length?' | 已选: '+checkedCities.join(', '):''}</span>`;
 
     const activeCount = state.cities.size + state.majors.size + state.education.size + state.exams.size + state.affiliations.size + state.funding.size + (state.favOnly?1:0) + (state.type!=='all'?1:0);
     const badge = document.getElementById('filterBadge');
