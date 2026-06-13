@@ -3,130 +3,119 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>江苏省2026年度公务员招录 — 职位筛选系统</title>
+<title>江苏省2026年度公职招录 — 职位筛选系统</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
 :root {
-  --primary: #1a3a6b;
-  --primary-light: #2a5298;
-  --accent: #c41230;
-  --accent-light: #fef0f0;
-  --bg: #f3f4f6;
-  --card: #fff;
-  --text: #1a1a2e;
-  --text-secondary: #6b7280;
-  --border: #e5e7eb;
-  --shadow: 0 1px 3px rgba(0,0,0,.08);
-  --radius: 8px;
+  --primary: #1a3a6b; --primary-light: #2a5298; --accent: #c41230;
+  --accent-light: #fef0f0; --bg: #f3f4f6; --card: #fff;
+  --text: #1a1a2e; --text-secondary: #6b7280; --border: #e5e7eb;
+  --shadow: 0 1px 3px rgba(0,0,0,.08); --radius: 8px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
-
-.header{background:var(--primary);color:#fff;padding:14px 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-.header-inner{max-width:1500px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-.header h1{font-size:1.2em;font-weight:700}
-.header h1 span{font-size:.6em;background:var(--accent);padding:3px 10px;border-radius:12px;font-weight:500;margin-left:6px}
-.stats-bar{display:flex;gap:16px;font-size:.82em;flex-wrap:wrap}
+.header{background:var(--primary);color:#fff;padding:10px 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.header-inner{max-width:1500px;margin:0 auto}
+.header h1{font-size:1.15em;font-weight:700;margin-bottom:6px}
+.header h1 span{font-size:.58em;background:var(--accent);padding:2px 8px;border-radius:10px;font-weight:500;margin-left:5px;vertical-align:middle}
+.header-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.stats-bar{display:flex;gap:12px;font-size:.8em;flex-wrap:wrap}
 .stats-bar .stat{text-align:center}
-.stat .num{font-size:1.3em;font-weight:800}
-.stat .lbl{font-size:.7em;opacity:.8}
+.stat .num{font-size:1.25em;font-weight:800}
+.stat .lbl{font-size:.68em;opacity:.8}
 .stat .num.hl{color:#fbbf24}
+.type-toggle{display:flex;gap:4px}
+.type-btn{padding:4px 14px;border-radius:14px;font-size:.75em;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.3);background:transparent;color:rgba(255,255,255,.7);transition:.15s}
+.type-btn.active{background:#fff;color:var(--primary);border-color:#fff}
 
-.layout{max-width:1500px;margin:0 auto;display:grid;grid-template-columns:290px 1fr;min-height:calc(100vh - 80px)}
-.sidebar{background:var(--card);border-right:1px solid var(--border);padding:14px;overflow-y:auto;max-height:calc(100vh - 80px);position:sticky;top:62px}
+.layout{max-width:1500px;margin:0 auto;display:grid;grid-template-columns:290px 1fr;min-height:calc(100vh - 90px)}
+.sidebar{background:var(--card);border-right:1px solid var(--border);padding:14px;overflow-y:auto;max-height:calc(100vh - 90px);position:sticky;top:80px}
 .main{padding:14px 18px;overflow:hidden}
 
-.filter-section{margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px}
+.filter-section{margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px}
 .filter-section:last-child{border-bottom:0}
-.filter-title{font-weight:700;font-size:.84em;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
-.filter-title::after{content:'▾';font-size:.65em;transition:.2s}
+.filter-title{font-weight:700;font-size:.82em;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
+.filter-title::after{content:'\25BE';font-size:.6em;transition:.2s}
 .filter-title.collapsed::after{transform:rotate(-90deg)}
-.filter-body{max-height:280px;overflow-y:auto;transition:.2s}
+.filter-body{max-height:260px;overflow-y:auto;transition:.2s}
 .filter-body.collapsed{max-height:0;overflow:hidden}
 
-.filter-option{display:flex;align-items:center;gap:5px;padding:3px 4px;font-size:.8em;cursor:pointer;border-radius:4px;transition:.1s}
+.filter-option{display:flex;align-items:center;gap:5px;padding:3px;font-size:.78em;cursor:pointer;border-radius:4px;transition:.1s}
 .filter-option:hover{background:#f0f4ff}
 .filter-option input[type=checkbox]{accent-color:var(--primary)}
-.filter-option .count{color:var(--text-secondary);font-size:.75em;margin-left:auto}
-.filter-search{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:.78em;margin-bottom:5px;outline:none}
+.filter-option .count{color:var(--text-secondary);font-size:.72em;margin-left:auto}
+.filter-search{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:.76em;margin-bottom:4px;outline:none}
 .filter-search:focus{border-color:var(--primary)}
 
-.btn{display:inline-flex;align-items:center;gap:4px;padding:7px 14px;border-radius:var(--radius);font-size:.8em;font-weight:600;cursor:pointer;border:1px solid transparent;transition:.15s;white-space:nowrap}
-.btn-primary{background:var(--primary);color:#fff}
-.btn-primary:hover{background:var(--primary-light)}
-.btn-outline{background:#fff;border-color:var(--border);color:var(--text)}
-.btn-outline:hover{background:var(--bg)}
-.btn-sm{padding:4px 8px;font-size:.72em}
+.btn{display:inline-flex;align-items:center;gap:3px;padding:7px 14px;border-radius:var(--radius);font-size:.78em;font-weight:600;cursor:pointer;border:1px solid transparent;transition:.15s;white-space:nowrap}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-light)}
+.btn-outline{background:#fff;border-color:var(--border);color:var(--text)}.btn-outline:hover{background:var(--bg)}
+.btn-sm{padding:4px 8px;font-size:.7em}
 .btn-group{display:flex;gap:4px;flex-wrap:wrap}
 
 .search-box{margin-bottom:10px}
-.search-box input{width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:var(--radius);font-size:.85em;outline:none;transition:.2s}
+.search-box input{width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:var(--radius);font-size:.83em;outline:none;transition:.2s}
 .search-box input:focus{border-color:var(--primary)}
 
 .cat-pills{display:flex;flex-wrap:wrap;gap:3px}
-.cat-pill{padding:2px 9px;border-radius:12px;font-size:.7em;cursor:pointer;background:var(--bg);border:1px solid var(--border);transition:.15s;user-select:none}
+.cat-pill{padding:2px 8px;border-radius:12px;font-size:.68em;cursor:pointer;background:var(--bg);border:1px solid var(--border);transition:.15s;user-select:none}
 .cat-pill.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .cat-pill:hover:not(.active){border-color:var(--primary)}
 
 .range-row{display:flex;align-items:center;gap:6px}
-.range-row input{width:65px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.8em;text-align:center}
-.range-row span{font-size:.78em;color:var(--text-secondary)}
+.range-row input{width:60px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.78em;text-align:center}
+.range-row span{font-size:.76em;color:var(--text-secondary)}
 
-.results-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
-.results-count{font-weight:700;font-size:.9em}
+.results-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.results-count{font-weight:700;font-size:.88em}
 .results-count em{color:var(--accent);font-style:normal}
+.type-badge{display:inline-block;padding:1px 6px;border-radius:8px;font-size:.75em;font-weight:600;margin-left:4px}
+.type-gwy{background:#dbeafe;color:#1d4ed8}
+.type-sydw{background:#fef3c7;color:#b45309}
 
-table{width:100%;border-collapse:collapse;font-size:.8em;background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
-th{background:#f8fafc;padding:8px 6px;text-align:left;font-weight:700;font-size:.75em;color:var(--text-secondary);border-bottom:2px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+table{width:100%;border-collapse:collapse;font-size:.78em;background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+th{background:#f8fafc;padding:7px 5px;text-align:left;font-weight:700;font-size:.72em;color:var(--text-secondary);border-bottom:2px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
 th:hover{color:var(--primary)}
-td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
+td{padding:6px 5px;border-bottom:1px solid var(--border);vertical-align:top}
 tr:hover{background:#f8faff}
 tr.expanded td{background:#f0f4ff}
-.badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:.72em;font-weight:700}
-.badge-a{background:#dbeafe;color:#1d4ed8}
-.badge-b{background:#fff7ed;color:#ea580c}
-.badge-c{background:#dcfce7;color:#16a34a}
-.num-high{background:#fef2f2;color:var(--accent);font-weight:800;padding:1px 5px;border-radius:4px}
-.expand-btn{cursor:pointer;color:var(--primary);font-size:.75em;font-weight:600;user-select:none;white-space:nowrap}
+.badge{display:inline-block;padding:1px 6px;border-radius:8px;font-size:.7em;font-weight:700}
+.badge-a,.badge-b,.badge-c{background:#dbeafe;color:#1d4ed8}
+.badge-sydw{background:#fef3c7;color:#b45309}
+.num-high{background:#fef2f2;color:var(--accent);font-weight:800;padding:1px 4px;border-radius:3px}
+.expand-btn{cursor:pointer;color:var(--primary);font-size:.72em;font-weight:600;user-select:none;white-space:nowrap}
 .expand-btn:hover{text-decoration:underline}
 .detail-row{display:none}
 .detail-row.show{display:table-row}
-.detail-row td{background:#f8faff;font-size:.78em;padding:10px 14px;color:var(--text-secondary);line-height:1.7}
-.detail-label{display:inline-block;background:var(--bg);padding:1px 7px;border-radius:4px;font-weight:600;color:var(--text);margin-right:3px;margin-bottom:3px}
+.detail-row td{background:#f8faff;font-size:.76em;padding:10px 14px;color:var(--text-secondary);line-height:1.7}
+.detail-label{display:inline-block;background:var(--bg);padding:1px 6px;border-radius:4px;font-weight:600;color:var(--text);margin-right:3px;margin-bottom:3px}
 
 .card-list{display:none}
-.card{background:var(--card);border-radius:var(--radius);padding:12px;margin-bottom:8px;box-shadow:var(--shadow);border-left:3px solid var(--primary)}
-.card .card-title{font-weight:700;font-size:.88em;margin-bottom:5px}
-.card .card-meta{display:flex;flex-wrap:wrap;gap:5px;font-size:.73em;color:var(--text-secondary);margin-bottom:4px}
-.card .card-meta span{background:var(--bg);padding:2px 7px;border-radius:4px}
+.card{background:var(--card);border-radius:var(--radius);padding:10px;margin-bottom:8px;box-shadow:var(--shadow);border-left:3px solid var(--primary)}
+.card.sydw-card{border-left-color:#f59e0b}
+.card .card-title{font-weight:700;font-size:.85em;margin-bottom:4px}
+.card .card-meta{display:flex;flex-wrap:wrap;gap:4px;font-size:.7em;color:var(--text-secondary);margin-bottom:3px}
+.card .card-meta span{background:var(--bg);padding:2px 6px;border-radius:4px}
 
 .empty{text-align:center;padding:50px 20px;color:var(--text-secondary)}
-.empty .icon{font-size:2.5em;margin-bottom:8px}
-
-.fav-btn{cursor:pointer;font-size:1em;user-select:none;transition:.15s}
-.fav-btn:hover{transform:scale(1.2)}
-.fav-btn.active{color:#f59e0b}
-
-.action-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-
 .loading{text-align:center;padding:40px;color:var(--text-secondary)}
-.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;margin:0 auto 10px}
+.spinner{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;margin:0 auto 10px}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-.filter-toggle{display:none;width:100%;padding:10px;background:var(--primary);color:#fff;border:0;border-radius:var(--radius);font-size:.85em;font-weight:700;cursor:pointer;margin-bottom:10px}
-.filter-toggle .badge-count{background:var(--accent);padding:1px 7px;border-radius:10px;font-size:.8em;margin-left:6px}
+.fav-btn{cursor:pointer;font-size:.95em;user-select:none;transition:.15s}
+.fav-btn:hover{transform:scale(1.2)}.fav-btn.active{color:#f59e0b}
+.action-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.filter-toggle{display:none;width:100%;padding:10px;background:var(--primary);color:#fff;border:0;border-radius:var(--radius);font-size:.83em;font-weight:700;cursor:pointer;margin-bottom:8px}
+.filter-toggle .badge-count{background:var(--accent);padding:1px 6px;border-radius:8px;font-size:.78em;margin-left:5px}
 
 @media(max-width:768px){
   .layout{grid-template-columns:1fr}
-  .sidebar{position:fixed;top:62px;left:0;right:0;bottom:0;z-index:99;transform:translateX(-100%);transition:.25s;max-height:none;overflow-y:auto}
+  .sidebar{position:fixed;top:80px;left:0;right:0;bottom:0;z-index:99;transform:translateX(-100%);transition:.25s;max-height:none;overflow-y:auto}
   .sidebar.open{transform:translateX(0)}
   .filter-toggle{display:block}
   .main{padding:8px}
-  table{display:none}
-  .card-list{display:block}
-  .header h1{font-size:1em}
-  .stats-bar{gap:8px}
-  .stat .num{font-size:1.1em}
+  table{display:none}.card-list{display:block}
+  .header h1{font-size:.95em}
+  .stats-bar{gap:6px}.stat .num{font-size:1.05em}
 }
 </style>
 </head>
@@ -134,11 +123,18 @@ tr.expanded td{background:#f0f4ff}
 
 <div class="header">
   <div class="header-inner">
-    <h1>江苏省2026年度公务员招录<span>职位筛选</span></h1>
-    <div class="stats-bar" id="statsBar">
-      <div class="stat"><div class="num" id="statPos">6,157</div><div class="lbl">职位总数</div></div>
-      <div class="stat"><div class="num" id="statRec">8,179</div><div class="lbl">招录总人数</div></div>
-      <div class="stat"><div class="num hl" id="statMatch">6,157</div><div class="lbl">当前匹配</div></div>
+    <h1>江苏省2026年度公职招录<span>公务员+事业单位</span></h1>
+    <div class="header-row">
+      <div class="stats-bar">
+        <div class="stat"><div class="num" id="statPos">6,157</div><div class="lbl">总职位</div></div>
+        <div class="stat"><div class="num" id="statRec">8,179</div><div class="lbl">总招录</div></div>
+        <div class="stat"><div class="num hl" id="statMatch">6,157</div><div class="lbl">匹配</div></div>
+      </div>
+      <div class="type-toggle" id="typeToggle">
+        <button class="type-btn active" data-type="all" onclick="setType('all',this)">全部</button>
+        <button class="type-btn" data-type="gwy" onclick="setType('gwy',this)">公务员</button>
+        <button class="type-btn" data-type="sydw" onclick="setType('sydw',this)">事业单位</button>
+      </div>
     </div>
   </div>
 </div>
@@ -152,18 +148,15 @@ tr.expanded td{background:#f0f4ff}
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="搜索职位/单位/专业..." oninput="onFilterChange()">
     </div>
-
-    <div class="filter-section" style="padding-bottom:6px">
+    <div class="filter-section" style="padding-bottom:4px">
       <label class="filter-option" style="font-weight:600">
         <input type="checkbox" id="favOnly" onchange="onFilterChange()"> 仅看收藏
       </label>
     </div>
-
     <div class="filter-section">
-      <div class="filter-title" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed')">城市</div>
+      <div class="filter-title" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed')">地区</div>
       <div class="filter-body" id="cityFilters"></div>
     </div>
-
     <div class="filter-section">
       <div class="filter-title" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed')">专业大类</div>
       <div class="filter-body">
@@ -171,22 +164,22 @@ tr.expanded td{background:#f0f4ff}
         <div class="cat-pills" id="majorFilters"></div>
       </div>
     </div>
-
     <div class="filter-section">
       <div class="filter-title" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed')">学历</div>
       <div class="filter-body" id="eduFilters"></div>
     </div>
-
     <div class="filter-section">
-      <div class="filter-title" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed')">考试类别</div>
+      <div class="filter-title" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed')">考试类别 / 岗位类别</div>
       <div class="filter-body btn-group" id="examFilters"></div>
     </div>
-
     <div class="filter-section">
       <div class="filter-title" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed')">隶属关系</div>
       <div class="filter-body" id="affilFilters"></div>
     </div>
-
+    <div class="filter-section" id="fundingSection" style="display:none">
+      <div class="filter-title" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed')">经费来源</div>
+      <div class="filter-body" id="fundingFilters"></div>
+    </div>
     <div class="filter-section">
       <div class="filter-title" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed')">招录人数</div>
       <div class="filter-body">
@@ -197,8 +190,7 @@ tr.expanded td{background:#f0f4ff}
         </div>
       </div>
     </div>
-
-    <button class="btn btn-outline" style="width:100%;justify-content:center;margin-top:8px" onclick="resetFilters()">重置全部筛选</button>
+    <button class="btn btn-outline" style="width:100%;justify-content:center;margin-top:6px" onclick="resetFilters()">重置全部筛选</button>
   </aside>
 
   <main class="main">
@@ -209,31 +201,30 @@ tr.expanded td{background:#f0f4ff}
         <button class="btn btn-outline btn-sm" onclick="copyShareLink()">复制分享链接</button>
       </div>
     </div>
-
     <div id="tableView">
       <div class="loading" id="loadingMsg"><div class="spinner"></div>正在加载数据...</div>
       <table id="resultsTable" style="display:none">
         <thead><tr>
-          <th style="width:28px"></th>
+          <th style="width:26px"></th>
           <th data-sort="an" onclick="setSort('an')">地区</th>
+          <th data-sort="_t" onclick="setSort('_t')" style="width:50px">类型</th>
           <th data-sort="un" onclick="setSort('un')">单位</th>
           <th data-sort="pn" onclick="setSort('pn')">职位名称</th>
-          <th data-sort="e" onclick="setSort('e')" style="width:55px">类别</th>
-          <th data-sort="n" onclick="setSort('n')" style="width:55px">招录</th>
-          <th data-sort="ed" onclick="setSort('ed')" style="width:90px">学历</th>
-          <th data-sort="m" onclick="setSort('m')" style="width:180px">专业</th>
-          <th style="width:45px">详情</th>
+          <th data-sort="e" onclick="setSort('e')" style="width:65px">类别</th>
+          <th data-sort="n" onclick="setSort('n')" style="width:45px">招录</th>
+          <th data-sort="ed" onclick="setSort('ed')" style="width:80px">学历</th>
+          <th data-sort="m" onclick="setSort('m')" style="width:160px">专业</th>
+          <th style="width:42px">详情</th>
         </tr></thead>
         <tbody id="tableBody"></tbody>
       </table>
     </div>
-
     <div class="card-list" id="cardList"></div>
   </main>
 </div>
 
-<div style="text-align:center;padding:16px;color:var(--text-secondary);font-size:.68em">
-  数据来源：江苏省2026年度考试录用公务员职位表 | 人工整理仅供参考，以官方公告为准
+<div style="text-align:center;padding:14px;color:var(--text-secondary);font-size:.66em">
+  数据来源：江苏省2026年度考试录用公务员职位表 + 省属事业单位统一公开招聘岗位表 | 人工整理仅供参考
 </div>
 
 <script>
@@ -241,37 +232,32 @@ const ALL_DATA = {{DATA}};
 const STATS = {{STATS}};
 
 const state = {
-  search: '',
-  cities: new Set(),
-  majors: new Set(),
-  education: new Set(),
-  exams: new Set(),
-  affiliations: new Set(),
-  recruitMin: 1,
-  recruitMax: STATS.maxRecruit || 8,
-  favOnly: false,
-  sortBy: null,
-  sortAsc: true,
+  search: '', cities: new Set(), majors: new Set(), education: new Set(),
+  exams: new Set(), affiliations: new Set(), recruitMin: 1,
+  recruitMax: STATS.maxRecruit || 8, favOnly: false, sortBy: null, sortAsc: true,
+  type: 'all', funding: new Set(),
 };
+const favorites = new Set(JSON.parse(localStorage.getItem('jsgk_fav2') || '[]'));
+function saveFavs(){localStorage.setItem('jsgk_fav2',JSON.stringify([...favorites]));}
 
-const favorites = new Set(JSON.parse(localStorage.getItem('jsgk_fav') || '[]'));
-function saveFavs() { localStorage.setItem('jsgk_fav', JSON.stringify([...favorites])); }
-
-function applyFilters() {
+function applyFilters(){
   let data = ALL_DATA;
-  if (state.favOnly) data = data.filter(r => favorites.has(r.pc + '|' + r.un));
+  // Type filter
+  if (state.type !== 'all') data = data.filter(r => r._t === state.type);
+  if (state.favOnly) data = data.filter(r => favorites.has(r._t + '|' + r.pc + '|' + r.un));
   if (state.search) {
     const q = state.search.toLowerCase();
-    data = data.filter(r => (r.un + r.pn + r.pd + r.m + r.an + r.o).toLowerCase().includes(q));
+    data = data.filter(r => (r.un + r.pn + r.pd + r.m + r.an + r.o + (r._dept||'')).toLowerCase().includes(q));
   }
   if (state.cities.size) data = data.filter(r => state.cities.has(r.an));
-  if (state.majors.size) data = data.filter(r => (r.mt || []).some(t => state.majors.has(t)));
+  if (state.majors.size) data = data.filter(r => (r.mt||[]).some(t => state.majors.has(t)));
   if (state.education.size) data = data.filter(r => state.education.has(r.ed));
   if (state.exams.size) data = data.filter(r => state.exams.has(r.e));
   if (state.affiliations.size) data = data.filter(r => state.affiliations.has(r.a));
+  if (state.funding.size) data = data.filter(r => state.funding.has(r._fund));
   data = data.filter(r => r.n >= state.recruitMin && r.n <= state.recruitMax);
   if (state.sortBy) {
-    data.sort((a, b) => {
+    data.sort((a,b) => {
       let va = a[state.sortBy], vb = b[state.sortBy];
       if (state.sortBy === 'n') { va = +va; vb = +vb; }
       else { va = String(va); vb = String(vb); }
@@ -283,65 +269,75 @@ function applyFilters() {
 }
 
 let renderTimer;
-function render() {
+function render(){
   clearTimeout(renderTimer);
   renderTimer = setTimeout(() => {
     const results = applyFilters();
-    const totalRec = results.reduce((s, r) => s + r.n, 0);
+    const totalRec = results.reduce((s,r) => s + r.n, 0);
+    const gwyCount = results.filter(r => r._t === 'gwy').length;
+    const sydwCount = results.filter(r => r._t === 'sydw').length;
 
     document.getElementById('statMatch').textContent = results.length.toLocaleString();
-    document.getElementById('resultsCount').innerHTML = `共 <em>${results.length.toLocaleString()}</em> 个职位，招录 <em>${totalRec}</em> 人`;
+    document.getElementById('resultsCount').innerHTML = `共<em>${results.length.toLocaleString()}</em>个职位 (公务员${gwyCount}+事业${sydwCount})，招录<em>${totalRec}</em>人`;
 
-    const activeCount = state.cities.size + state.majors.size + state.education.size + state.exams.size + state.affiliations.size + (state.favOnly ? 1 : 0);
+    const activeCount = state.cities.size + state.majors.size + state.education.size + state.exams.size + state.affiliations.size + state.funding.size + (state.favOnly?1:0) + (state.type!=='all'?1:0);
     const badge = document.getElementById('filterBadge');
     badge.textContent = activeCount;
     badge.style.display = activeCount > 0 ? 'inline' : 'none';
 
+    // Toggle funding filter visibility
+    document.getElementById('fundingSection').style.display = (state.type === 'sydw' || state.type === 'all') ? '' : 'none';
+
+    // Table
     const tbody = document.getElementById('tableBody');
     if (!results.length) {
-      tbody.innerHTML = '<tr><td colspan="9"><div class="empty"><div class="icon"></div>没有匹配的职位，请调整筛选条件</div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10"><div class="empty">没有匹配的职位，请调整筛选条件</div></td></tr>';
     } else {
       const slice = results.slice(0, 500);
       tbody.innerHTML = slice.map((r, i) => {
-        const isFav = favorites.has(r.pc + '|' + r.un);
-        const catClass = 'badge-' + r.e.toLowerCase();
+        const isFav = favorites.has(r._t + '|' + r.pc + '|' + r.un);
+        const isSydw = r._t === 'sydw';
         const nHigh = r.n >= 5 ? ' num-high' : '';
         return `<tr id="row-${i}">
-          <td><span class="fav-btn${isFav?' active':''}" onclick="toggleFav('${r.pc}|${r.un}',this)" data-key="${r.pc}|${r.un}">${isFav?'★':'☆'}</span></td>
+          <td><span class="fav-btn${isFav?' active':''}" onclick="toggleFav('${r._t}|${r.pc}|${r.un}',this)">${isFav?'★':'☆'}</span></td>
           <td title="${r.an}">${r.an.length>5?r.an.substring(0,4)+'..':r.an}</td>
+          <td><span class="type-badge ${isSydw?'type-sydw':'type-gwy'}">${isSydw?'事业':'公务员'}</span></td>
           <td title="${r.un}">${r.un.length>10?r.un.substring(0,8)+'..':r.un}</td>
           <td title="${r.pn}">${r.pn.length>12?r.pn.substring(0,10)+'..':r.pn}</td>
-          <td><span class="badge ${catClass}">${r.e}</span></td>
+          <td><span class="badge ${isSydw?'badge-sydw':'badge-a'}">${r.e}</span></td>
           <td><span class="${nHigh}">${r.n}</span></td>
           <td>${r.ed}</td>
-          <td title="${r.m}">${r.m.length>25?r.m.substring(0,23)+'..':r.m}</td>
+          <td title="${r.m}">${r.m.length>22?r.m.substring(0,20)+'..':r.m}</td>
           <td><span class="expand-btn" onclick="toggleDetail(${i},this)">展开</span></td>
         </tr>
         <tr class="detail-row" id="detail-${i}">
-          <td colspan="9">
-            <div><span class="detail-label">职位简介</span> ${r.pd||'（无）'}</div>
-            <div style="margin-top:4px"><span class="detail-label">专业</span> ${r.m}</div>
-            <div style="margin-top:4px"><span class="detail-label">其它</span> ${r.o||'（无）'} &nbsp; <span class="detail-label">开考比</span> ${r.r} &nbsp; <span class="detail-label">隶属</span> ${r.a}</div>
+          <td colspan="10">
+            <div><span class="detail-label">职位简介</span>${r.pd||'（无）'}</div>
+            <div style="margin-top:4px"><span class="detail-label">专业</span>${r.m}</div>
+            <div style="margin-top:4px"><span class="detail-label">其它</span>${r.o||'（无）'}&nbsp;<span class="detail-label">开考比</span>${r.r}&nbsp;<span class="detail-label">隶属</span>${r.a}</div>
+            ${isSydw?`<div style="margin-top:4px"><span class="detail-label">主管部门</span>${r._dept||''}&nbsp;<span class="detail-label">经费</span>${r._fund||''}&nbsp;<span class="detail-label">招聘对象</span>${r._target||''}</div><div style="margin-top:3px"><span class="detail-label">考试形式</span>${r._examFmt||''}&nbsp;<span class="detail-label">咨询</span>${(r._contact||'').substring(0,60)}</div>`:''}
           </td>
         </tr>`;
       }).join('');
-      if (results.length > 500) tbody.innerHTML += '<tr><td colspan="9" style="text-align:center;color:var(--text-secondary);padding:12px">仅展示前500条，请细化筛选条件查看更精确结果</td></tr>';
+      if (results.length > 500) tbody.innerHTML += '<tr><td colspan="10" style="text-align:center;color:var(--text-secondary);padding:12px">仅展示前500条，请细化筛选条件</td></tr>';
     }
 
+    // Cards
     const cl = document.getElementById('cardList');
     if (!results.length) {
-      cl.innerHTML = '<div class="empty"><div class="icon"></div>没有匹配的职位，请调整筛选条件</div>';
+      cl.innerHTML = '<div class="empty">没有匹配的职位</div>';
     } else {
       const slice = results.slice(0, 300);
       cl.innerHTML = slice.map(r => {
-        const isFav = favorites.has(r.pc + '|' + r.un);
-        const catClass = 'badge-' + r.e.toLowerCase();
-        return `<div class="card">
-          <div class="card-title">${r.pn} <span style="float:right" class="fav-btn${isFav?' active':''}" onclick="toggleFav('${r.pc}|${r.un}',this)">${isFav?'★':'☆'}</span></div>
-          <div class="card-meta"><span>${r.an}</span><span>${r.un}</span><span class="badge ${catClass}">${r.e}类</span><span>招${r.n}人</span></div>
-          <div class="card-meta"><span>${r.ed}</span><span>${r.m.substring(0,40)}</span></div>
-          <div style="font-size:.75em;color:var(--text-secondary);margin-top:4px">${r.pd?r.pd.substring(0,80)+(r.pd.length>80?'...':''):''}</div>
-          ${r.o?'<div style="font-size:.72em;color:var(--accent);margin-top:3px">'+r.o.substring(0,60)+'</div>':''}
+        const isFav = favorites.has(r._t + '|' + r.pc + '|' + r.un);
+        const isSydw = r._t === 'sydw';
+        return `<div class="card${isSydw?' sydw-card':''}">
+          <div class="card-title">${r.pn}<span style="float:right" class="fav-btn${isFav?' active':''}" onclick="toggleFav('${r._t}|${r.pc}|${r.un}',this)">${isFav?'★':'☆'}</span></div>
+          <div class="card-meta"><span>${r.an}</span><span class="type-badge ${isSydw?'type-sydw':'type-gwy'}">${isSydw?'事业':'公务员'}</span><span>${r.un}</span></div>
+          <div class="card-meta"><span>${r.e}</span><span>招${r.n}人</span><span>${r.ed}</span></div>
+          <div class="card-meta"><span>${r.m.substring(0,35)}</span></div>
+          <div style="font-size:.72em;color:var(--text-secondary);margin-top:3px">${(r.pd||'').substring(0,80)}</div>
+          ${isSydw?'<div style="font-size:.68em;color:#b45309;margin-top:2px">'+ (r._dept||'') + ' | ' + (r._fund||'') + '</div>':''}
         </div>`;
       }).join('');
     }
@@ -367,7 +363,15 @@ function toggleFav(key, el) {
   if (state.favOnly) render();
 }
 
-function setSort(field) { if (state.sortBy===field) state.sortAsc=!state.sortAsc; else { state.sortBy=field; state.sortAsc=true; } render(); }
+function setSort(field) { if(state.sortBy===field)state.sortAsc=!state.sortAsc; else{state.sortBy=field;state.sortAsc=true;} render(); }
+function setType(type, el) {
+  state.type = type;
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  // Show/hide funding filter
+  document.getElementById('fundingSection').style.display = (type==='sydw'||type==='all') ? '' : 'none';
+  render();
+}
 
 function onFilterChange() {
   state.search = document.getElementById('searchInput').value.trim();
@@ -379,13 +383,17 @@ function onFilterChange() {
 
 function resetFilters() {
   state.search=''; state.cities.clear(); state.majors.clear(); state.education.clear();
-  state.exams.clear(); state.affiliations.clear(); state.recruitMin=1; state.recruitMax=STATS.maxRecruit;
-  state.favOnly=false; state.sortBy=null; state.sortAsc=true;
+  state.exams.clear(); state.affiliations.clear(); state.funding.clear();
+  state.recruitMin=1; state.recruitMax=STATS.maxRecruit;
+  state.favOnly=false; state.sortBy=null; state.sortAsc=true; state.type='all';
   document.getElementById('searchInput').value=''; document.getElementById('favOnly').checked=false;
   document.getElementById('recruitMin').value=1; document.getElementById('recruitMax').value=STATS.maxRecruit;
-  document.querySelectorAll('#cityFilters input,#eduFilters input,#affilFilters input').forEach(cb=>cb.checked=false);
+  document.querySelectorAll('#cityFilters input,#eduFilters input,#affilFilters input,#fundingFilters input').forEach(cb=>cb.checked=false);
   document.querySelectorAll('#examFilters .btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('#majorFilters .cat-pill').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.type-btn[data-type="all"]').classList.add('active');
+  document.getElementById('fundingSection').style.display='';
   render();
 }
 
@@ -393,11 +401,17 @@ function filterCategories(q) { document.querySelectorAll('#majorFilters .cat-pil
 
 function buildFilterUI() {
   document.getElementById('cityFilters').innerHTML = STATS.cities.map(c=>`<label class="filter-option"><input type="checkbox" value="${c.name}" onchange="toggleCity('${c.name.replace(/'/g,"\\'")}',this.checked)">${c.name}<span class="count">${c.recruits}</span></label>`).join('');
-  document.getElementById('majorFilters').innerHTML = STATS.majorCategories.slice(0,35).map(m=>`<span class="cat-pill" data-major="${m.name}" onclick="toggleMajor('${m.name.replace(/'/g,"\\'")}',this)">${m.name} <span style="opacity:.6">${m.recruits}</span></span>`).join('');
+  document.getElementById('majorFilters').innerHTML = STATS.majorCategories.slice(0,35).map(m=>`<span class="cat-pill" data-major="${m.name}" onclick="toggleMajor('${m.name.replace(/'/g,"\\'")}',this)">${m.name}<span style="opacity:.6;margin-left:2px">${m.recruits}</span></span>`).join('');
   document.getElementById('eduFilters').innerHTML = STATS.educationLevels.map(e=>`<label class="filter-option"><input type="checkbox" value="${e}" onchange="toggleEdu('${e.replace(/'/g,"\\'")}',this.checked)">${e}</label>`).join('');
-  document.getElementById('examFilters').innerHTML = STATS.examCategories.map(e=>`<button class="btn btn-outline btn-sm" onclick="toggleExam('${e}',this)">${e}类</button>`).join('');
+  document.getElementById('examFilters').innerHTML = STATS.examCategories.map(e=>`<button class="btn btn-outline btn-sm" onclick="toggleExam('${e}',this)">${e}</button>`).join('');
   document.getElementById('affilFilters').innerHTML = STATS.affiliations.map(a=>`<label class="filter-option"><input type="checkbox" value="${a}" onchange="toggleAffil('${a.replace(/'/g,"\\'")}',this.checked)">${a}</label>`).join('');
+  // Funding sources
+  const funds = [...new Set(ALL_DATA.map(r=>r._fund).filter(Boolean))].sort();
+  document.getElementById('fundingFilters').innerHTML = funds.map(f=>`<label class="filter-option"><input type="checkbox" value="${f}" onchange="toggleFunding('${f.replace(/'/g,"\\'")}',this.checked)">${f}</label>`).join('');
   document.getElementById('recruitMax').value = STATS.maxRecruit;
+  // Update total stats
+  document.getElementById('statPos').textContent = STATS.totalPositions.toLocaleString();
+  document.getElementById('statRec').textContent = STATS.totalRecruits.toLocaleString();
 }
 
 function toggleCity(v,ok){ok?state.cities.add(v):state.cities.delete(v);onFilterChange();}
@@ -405,6 +419,7 @@ function toggleMajor(v,el){el.classList.toggle('active');el.classList.contains('
 function toggleEdu(v,ok){ok?state.education.add(v):state.education.delete(v);onFilterChange();}
 function toggleExam(v,el){el.classList.toggle('active');el.classList.contains('active')?state.exams.add(v):state.exams.delete(v);onFilterChange();}
 function toggleAffil(v,ok){ok?state.affiliations.add(v):state.affiliations.delete(v);onFilterChange();}
+function toggleFunding(v,ok){ok?state.funding.add(v):state.funding.delete(v);onFilterChange();}
 
 function updateHash(){
   const p=[];
@@ -414,6 +429,7 @@ function updateHash(){
   if(state.education.size)p.push('edu='+[...state.education].map(encodeURIComponent).join(','));
   if(state.exams.size)p.push('exam='+[...state.exams].join(','));
   if(state.favOnly)p.push('fav=1');
+  if(state.type!=='all')p.push('type='+state.type);
   history.replaceState(null,'','#'+p.join('&'));
 }
 
@@ -426,28 +442,36 @@ function loadHash(){
   if(p.get('edu'))state.education=new Set(p.get('edu').split(','));
   if(p.get('exam'))state.exams=new Set(p.get('exam').split(','));
   if(p.get('fav'))state.favOnly=true;
+  if(p.get('type')){state.type=p.get('type');}
   setTimeout(()=>{
     document.querySelectorAll('#cityFilters input').forEach(cb=>{if(state.cities.has(cb.value))cb.checked=true;});
     document.querySelectorAll('#majorFilters .cat-pill').forEach(p=>{if(state.majors.has(p.dataset.major))p.classList.add('active');});
     document.querySelectorAll('#eduFilters input').forEach(cb=>{if(state.education.has(cb.value))cb.checked=true;});
-    document.querySelectorAll('#examFilters .btn').forEach(b=>{if(state.exams.has(b.textContent.trim()[0]))b.classList.add('active');});
+    document.querySelectorAll('#examFilters .btn').forEach(b=>{if(state.exams.has(b.textContent.trim()))b.classList.add('active');});
     document.getElementById('favOnly').checked=state.favOnly;
+    const tb = document.querySelector('.type-btn[data-type="'+(state.type||'all')+'"]');
+    if(tb){document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));tb.classList.add('active');}
   },50);
 }
 
 function exportToExcel(){
   const results=applyFilters();
-  const rows=results.map(r=>({'地区':r.an,'单位名称':r.un,'职位名称':r.pn,'职位简介':r.pd,'考试类别':r.e+'类','开考比例':r.r,'招录人数':r.n,'学历':r.ed,'专业':r.m,'其它':r.o,'隶属关系':r.a}));
+  const rows=results.map(r=>({
+    '类型':r._t==='gwy'?'公务员':'事业单位','地区':r.an,'单位':r.un,
+    '职位名称':r.pn,'岗位类别':r.e,'招录人数':r.n,'学历':r.ed,'专业':r.m,
+    '职位简介':r.pd,'其它':r.o,'开考比例':r.r,'隶属':r.a,
+    '主管部门':r._dept||'','经费来源':r._fund||'','招聘对象':r._target||'','考试形式':r._examFmt||'','咨询电话':r._contact||'',
+  }));
   const ws=XLSX.utils.json_to_sheet(rows);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'筛选结果');
-  XLSX.writeFile(wb,`江苏2026公务员_筛选_${results.length}条.xlsx`);
+  XLSX.writeFile(wb,`江苏公职招聘_筛选_${results.length}条.xlsx`);
 }
 
-function copyShareLink(){updateHash();navigator.clipboard.writeText(location.href).then(()=>alert('链接已复制！分享给对方即可看到相同筛选结果。')).catch(()=>prompt('复制链接：',location.href));}
+function copyShareLink(){updateHash();navigator.clipboard.writeText(location.href).then(()=>alert('链接已复制！')).catch(()=>prompt('复制链接：',location.href));}
 
 window.addEventListener('DOMContentLoaded',()=>{
-  if(!ALL_DATA||!ALL_DATA.length){document.getElementById('loadingMsg').innerHTML='<div class="empty"><div class="icon"></div>数据加载失败，请运行 build.js 重新生成</div>';return;}
+  if(!ALL_DATA||!ALL_DATA.length){document.getElementById('loadingMsg').innerHTML='<div class="empty">数据加载失败</div>';return;}
   buildFilterUI();loadHash();render();
 });
 window.addEventListener('hashchange',()=>{loadHash();render();});
