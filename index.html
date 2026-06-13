@@ -290,7 +290,15 @@ tr.expanded td{background:#f0f4ff}
         s.parentNode.insertBefore(j, s);
     })(window, document, 'script', '_MEIQIA');
     _MEIQIA('entId', '57a1b4cbb3a5d0489e88d3598fd02bf2');
-    _MEIQIA('allSet', function() { _MEIQIA('withoutBtn'); });
+    _MEIQIA('allSet', function() {
+      // Hide Meiqia default button, keep only our custom one
+      var observer = new MutationObserver(function() {
+        var btn = document.querySelector('#MEIQIA-BTN-BUBBLE, #_MEIQIA_BTN_BUBBLE, [id*=MEIQIA-BTN], [class*=meiqia-btn], [class*=meiqia-bubble], #meiqia-btn');
+        if (btn) { btn.style.display = 'none'; observer.disconnect(); }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      setTimeout(function() { observer.disconnect(); }, 12000);
+    });
 </script>
 
 <div style="text-align:center;padding:14px;color:var(--text-secondary);font-size:.66em">
