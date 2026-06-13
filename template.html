@@ -265,7 +265,7 @@ function applyFilters(){
     const q = state.search.toLowerCase();
     data = data.filter(r => (r.un + r.pn + r.pd + r.m + r.an + r.o + (r._dept||'')).toLowerCase().includes(q));
   }
-  if (state.cities.size) data = data.filter(r => state.cities.has(r.an));
+  if (state.cities.size) data = data.filter(r => state.cities.has(r._city || r.an));
   if (state.majors.size) data = data.filter(r => (r.mt||[]).some(t => state.majors.has(t)));
   if (state.education.size) data = data.filter(r => state.education.has(r.ed));
   if (state.exams.size) data = data.filter(r => state.exams.has(r.e));
