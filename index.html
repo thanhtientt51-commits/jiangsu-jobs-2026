@@ -259,7 +259,7 @@ tr.expanded td{background:#f0f4ff}
 </a>
 
 <!-- Floating Inquiry Button -->
-<button class="float-inquiry" onclick="showWechat()">
+<button class="float-inquiry" onclick="openChat()">
   💬 在线咨询
 </button>
 
@@ -273,6 +273,22 @@ tr.expanded td{background:#f0f4ff}
     <button class="btn-close" onclick="hideWechat()">关闭</button>
   </div>
 </div>
+
+<!-- 美洽在线客服 -->
+<script type='text/javascript'>
+    (function(a, b, c, d, e, j, s) {
+        a[d] = a[d] || function() {
+            (a[d].a = a[d].a || []).push(arguments)
+        };
+        j = b.createElement(c),
+            s = b.getElementsByTagName(c)[0];
+        j.async = true;
+        j.charset = 'UTF-8';
+        j.src = 'https://visitor-static.meiqia.com/fe-widget-visitor/loader.js';
+        s.parentNode.insertBefore(j, s);
+    })(window, document, 'script', '_MEIQIA');
+    _MEIQIA('entId', '57a1b4cbb3a5d0489e88d3598fd02bf2');
+</script>
 
 <div style="text-align:center;padding:14px;color:var(--text-secondary);font-size:.66em">
   数据来源：江苏省2026年度考试录用公务员职位表 + 省属事业单位统一公开招聘岗位表 | 人工整理仅供参考
@@ -615,6 +631,7 @@ function copyShareLink(){updateHash();navigator.clipboard.writeText(location.hre
 function showWechat(){document.getElementById('wxModal').classList.add('show');}
 function hideWechat(){document.getElementById('wxModal').classList.remove('show');}
 function copyWechat(){navigator.clipboard.writeText('KOl_Rabbit').then(()=>{alert('微信号已复制：KOl_Rabbit\n\n打开微信添加好友即可');hideWechat();}).catch(()=>{prompt('请手动复制微信号：','KOl_Rabbit');});}
+function openChat(){if(window._MEIQIA){_MEIQIA('showPanel');}else{showWechat();}}
 
 window.addEventListener('DOMContentLoaded',()=>{
   if(!ALL_DATA||!ALL_DATA.length){document.getElementById('loadingMsg').innerHTML='<div class="empty">数据加载失败</div>';return;}
