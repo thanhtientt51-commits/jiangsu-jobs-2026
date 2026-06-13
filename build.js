@@ -513,6 +513,86 @@ const STATS = {
   hasBusiness: true,
 };
 
+// ============ 工资估算模型 ============
+// 公务员薪资 (全包年收入万)
+const GWY_SALARY = {
+  '苏州市':    { base: [22,28], gajfy: [25,32], xz: [23,28], sheng: [18,22] },
+  '南京市':    { base: [20,25], gajfy: [23,28], xz: [20,25], sheng: [18,22] },
+  '无锡市':    { base: [20,24], gajfy: [23,27], xz: [20,24], sheng: [18,22] },
+  '常州市':    { base: [18,22], gajfy: [20,24], xz: [18,22], sheng: [17,21] },
+  '南通市':    { base: [17,22], gajfy: [20,25], xz: [18,22], sheng: [16,20] },
+  '扬州市':    { base: [15,18], gajfy: [17,20], xz: [15,18], sheng: [14,17] },
+  '泰州市':    { base: [14,17], gajfy: [16,19], xz: [14,17], sheng: [13,16] },
+  '镇江市':    { base: [14,16], gajfy: [16,19], xz: [14,16], sheng: [13,16] },
+  '盐城市':    { base: [15,17], gajfy: [17,20], xz: [15,18], sheng: [14,17] },
+  '淮安市':    { base: [14,17], gajfy: [16,19], xz: [14,17], sheng: [13,16] },
+  '徐州市':    { base: [14,16], gajfy: [16,19], xz: [14,17], sheng: [13,16] },
+  '宿迁市':    { base: [12,15], gajfy: [14,17], xz: [13,15], sheng: [11,14] },
+  '连云港市':  { base: [12,15], gajfy: [14,17], xz: [13,15], sheng: [11,14] },
+  '江苏省':    { base: [18,22], gajfy: [20,25], xz: [18,22], sheng: [18,22] },
+};
+
+// 事业单位薪资 (全包年收入万)
+const SYDW_SALARY = {
+  '苏州市':    { base: [14,20], edu: [15,22], med: [15,21], full: [14,20], diff: [15,22] },
+  '南京市':    { base: [14,19], edu: [15,20], med: [15,20], full: [14,19], diff: [15,21] },
+  '无锡市':    { base: [13,17], edu: [14,18], med: [14,18], full: [13,17], diff: [14,19] },
+  '常州市':    { base: [12,16], edu: [13,17], med: [13,17], full: [12,16], diff: [13,18] },
+  '南通市':    { base: [13,17], edu: [14,18], med: [14,18], full: [13,17], diff: [14,19] },
+  '扬州市':    { base: [12,15], edu: [13,16], med: [13,16], full: [12,15], diff: [13,17] },
+  '泰州市':    { base: [10,14], edu: [11,15], med: [11,15], full: [10,14], diff: [11,16] },
+  '镇江市':    { base: [10,13], edu: [11,14], med: [11,14], full: [10,13], diff: [11,15] },
+  '盐城市':    { base: [10,13], edu: [11,14], med: [11,14], full: [10,13], diff: [11,15] },
+  '淮安市':    { base: [9,13],  edu: [10,14], med: [10,14], full: [9,13],  diff: [10,15] },
+  '徐州市':    { base: [10,13], edu: [11,14], med: [11,14], full: [10,13], diff: [11,15] },
+  '宿迁市':    { base: [8,11],  edu: [9,12],  med: [9,12],  full: [8,11],  diff: [9,13] },
+  '连云港市':  { base: [8,12],  edu: [9,13],  med: [9,13],  full: [8,12],  diff: [9,14] },
+  '江苏省':    { base: [13,18], edu: [14,19], med: [14,19], full: [13,18], diff: [14,20] },
+};
+
+function estimateSalary(r) {
+  const city = r._city || r.an;
+  const isGwy = r._t === 'gwy';
+  const unit = r.un + r.pn + r.pd;
+  const info = r.o + r.pd + r._fund + r._dept;
+
+  if (isGwy) {
+    const tier = GWY_SALARY[city] || GWY_SALARY['江苏省'];
+    // 公检法/监狱/戒毒系统
+    if (/公安|法院|检察院|监狱|戒毒|司法|交警|刑警|民警/.test(unit)) {
+      return tier.gajfy;
+    }
+    // 乡镇/街道
+    if (/乡镇|街道|村|社区/.test(unit) || r.a === '乡镇') {
+      return tier.xz;
+    }
+    if (r.a === '省') {
+      return tier.sheng || tier.base;
+    }
+    return tier.base;
+  } else {
+    // 事业单位
+    const tier = SYDW_SALARY[city] || SYDW_SALARY['江苏省'];
+    if (/医院|卫生|护理|临床|医|药|疾控|妇幼|血站/.test(unit)) {
+      return tier.med || tier.base;
+    }
+    if (/学校|大学|学院|教师|教育|教授|中小学|幼儿园/.test(unit)) {
+      return tier.edu || tier.base;
+    }
+    // 经费来源
+    if (/差额|自收/.test(info)) {
+      return tier.diff || tier.base;
+    }
+    return tier.full || tier.base;
+  }
+}
+
+// Apply salary estimates
+allData.forEach(r => {
+  const salary = estimateSalary(r);
+  r._salary = salary[0] + '-' + salary[1] + '万/年（全包，含公积金+年终）';
+});
+
 // ============ 压缩数据 ============
 const compactData = allData.map(r => ({
   a: r.a, an: r.an, _city: r._city || r.an, un: r.un, pc: r.pc, pn: r.pn, pd: r.pd,
@@ -520,6 +600,7 @@ const compactData = allData.map(r => ({
   mt: r.mt, _s: r._src, _t: r._t,
   _dept: r._dept || '', _fund: r._fund || '', _target: r._target || '',
   _examFmt: r._examFmt || '', _contact: r._contact || '',
+  _salary: r._salary || '',
 }));
 
 const DATA_JSON = JSON.stringify(compactData);

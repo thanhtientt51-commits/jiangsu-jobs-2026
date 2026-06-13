@@ -332,6 +332,7 @@ function render(){
             <div><span class="detail-label">职位简介</span>${r.pd||'（无）'}</div>
             <div style="margin-top:4px"><span class="detail-label">专业</span>${r.m}</div>
             <div style="margin-top:4px"><span class="detail-label">其它</span>${r.o||'（无）'}&nbsp;<span class="detail-label">开考比</span>${r.r}&nbsp;<span class="detail-label">隶属</span>${r.a}</div>
+            <div style="margin-top:4px"><span class="detail-label" style="background:#fef2f2;color:#c41230">预估薪资</span> ${r._salary||'暂无数据'} <span style="font-size:.75em;color:#888">（基于同城同系统近两年数据估算，仅供参考）</span></div>
             ${isSydw?`<div style="margin-top:4px"><span class="detail-label">主管部门</span>${r._dept||''}&nbsp;<span class="detail-label">经费</span>${r._fund||''}&nbsp;<span class="detail-label">招聘对象</span>${r._target||''}</div><div style="margin-top:3px"><span class="detail-label">考试形式</span>${r._examFmt||''}&nbsp;<span class="detail-label">咨询</span>${(r._contact||'').substring(0,60)}</div>`:''}
           </td>
         </tr>`;
