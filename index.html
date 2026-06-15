@@ -118,7 +118,13 @@ tr.expanded td{background:#f0f4ff}
 .float-inquiry:hover{transform:scale(1.05);box-shadow:0 6px 28px rgba(196,18,48,.5)}
 @keyframes pulse{0%,100%{box-shadow:0 4px 20px rgba(196,18,48,.35)}50%{box-shadow:0 4px 32px rgba(196,18,48,.6)}}
 
-/* Hide Meiqia default button - JS handles this */
+/* AI Panel */
+.ai-panel{position:fixed;top:0;right:-420px;width:400px;height:100vh;z-index:250;background:#fff;box-shadow:-4px 0 24px rgba(0,0,0,.15);transition:right .3s ease;display:flex;flex-direction:column}
+.ai-panel.open{right:0}
+.ai-panel-header{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:14px 18px;font-weight:700;display:flex;justify-content:space-between;align-items:center;font-size:.95em}
+.ai-panel iframe{flex:1;width:100%;border:0}
+#aiFallback{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center}
+@media(max-width:768px){.ai-panel{width:100vw;right:-100vw}}
 
 /* WeChat modal */
 .wx-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:300;justify-content:center;align-items:center}
@@ -261,9 +267,27 @@ tr.expanded td{background:#f0f4ff}
 </a>
 
 <!-- Floating Inquiry Button -->
-<button class="float-inquiry" onclick="openChat()">
+<button class="float-inquiry" onclick="openChat()" style="bottom:80px">
   💬 在线咨询
 </button>
+
+<!-- AI选岗助手按钮 -->
+<button class="float-inquiry" onclick="toggleAiPanel()" style="background:linear-gradient(135deg,#667eea,#764ba2);bottom:24px;animation-name:none">
+  🤖 AI选岗
+</button>
+
+<!-- AI选岗面板 -->
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-panel-header">
+    <span>🤖 AI选岗助手</span>
+    <button onclick="toggleAiPanel()" style="background:0;border:0;color:#fff;font-size:1.2em;cursor:pointer">✕</button>
+  </div>
+  <iframe id="aiIframe" src="https://doubao.com/bot/NT4bNDCx" frameborder="0" allow="clipboard-write"></iframe>
+  <div id="aiFallback" style="display:none;text-align:center;padding:40px 20px;color:var(--text-secondary)">
+    <p style="margin-bottom:16px">豆包未能在面板中加载</p>
+    <button class="btn btn-primary" onclick="window.open('https://doubao.com/bot/NT4bNDCx','_blank')">🔗 在新窗口打开豆包</button>
+  </div>
+</div>
 
 <!-- WeChat Modal -->
 <div class="wx-modal" id="wxModal" onclick="if(event.target===this)hideWechat()">
@@ -643,6 +667,17 @@ function showWechat(){document.getElementById('wxModal').classList.add('show');}
 function hideWechat(){document.getElementById('wxModal').classList.remove('show');}
 function copyWechat(){navigator.clipboard.writeText('KOl_Rabbit').then(()=>{alert('微信号已复制：KOl_Rabbit\n\n打开微信添加好友即可');hideWechat();}).catch(()=>{prompt('请手动复制微信号：','KOl_Rabbit');});}
 function openChat(){if(window._MEIQIA){_MEIQIA('showPanel');}else{showWechat();}}
+function toggleAiPanel(){
+  var p=document.getElementById('aiPanel');
+  p.classList.toggle('open');
+  if(p.classList.contains('open')){
+    setTimeout(function(){
+      var iframe=document.getElementById('aiIframe');
+      try{var doc=iframe.contentDocument||iframe.contentWindow.document;if(!doc||!doc.body||doc.body.innerHTML.length<50){document.getElementById('aiFallback').style.display='flex';}}
+      catch(e){document.getElementById('aiFallback').style.display='flex';}
+    },3000);
+  }
+}
 
 window.addEventListener('DOMContentLoaded',()=>{
   if(!ALL_DATA||!ALL_DATA.length){document.getElementById('loadingMsg').innerHTML='<div class="empty">数据加载失败</div>';return;}
