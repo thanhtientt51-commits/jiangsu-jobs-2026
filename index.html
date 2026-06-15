@@ -113,9 +113,12 @@ tr.expanded td{background:#f0f4ff}
 .contact-left:hover,.contact-right:hover{background:var(--primary-light);padding:20px 12px}
 .contact-icon{font-size:1.3em}
 
-/* Floating inquiry button */
-.float-inquiry{position:fixed;bottom:24px;right:24px;z-index:200;background:var(--accent);color:#fff;padding:14px 20px;border-radius:28px;font-weight:700;font-size:.85em;cursor:pointer;border:0;box-shadow:0 4px 20px rgba(196,18,48,.35);transition:.2s;display:flex;align-items:center;gap:8px;animation:pulse 2s infinite}
-.float-inquiry:hover{transform:scale(1.05);box-shadow:0 6px 28px rgba(196,18,48,.5)}
+/* Side floating buttons */
+.float-inquiry{position:fixed;right:16px;z-index:200;color:#fff;padding:0;border-radius:50%;font-weight:700;cursor:pointer;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:.2s;width:60px;height:60px;font-size:.65em;box-shadow:0 4px 20px rgba(0,0,0,.25)}
+.float-inquiry:hover{transform:scale(1.1)}
+.float-chat{top:50%;margin-top:-75px;background:var(--accent);animation:pulse 2s infinite}
+.float-ai{top:50%;margin-top:5px;background:linear-gradient(135deg,#667eea,#764ba2)}
+.float-inquiry .fi-icon{font-size:1.6em;line-height:1}
 @keyframes pulse{0%,100%{box-shadow:0 4px 20px rgba(196,18,48,.35)}50%{box-shadow:0 4px 32px rgba(196,18,48,.6)}}
 
 /* AI Panel */
@@ -258,22 +261,13 @@ tr.expanded td{background:#f0f4ff}
   </main>
 </div>
 
-<!-- Contact Side Bars -->
-<a class="contact-left" title="添加微信咨询" onclick="showWechat()">
-  <span class="contact-icon">💬</span> 添加微信
-</a>
-<a class="contact-right" title="添加微信咨询" onclick="showWechat()">
-  <span class="contact-icon">📱</span> KOl_Rabbit
-</a>
-
-<!-- Floating Inquiry Button -->
-<button class="float-inquiry" onclick="openChat()" style="bottom:80px">
-  💬 在线咨询
+<!-- Contact Side Bars removed - now using floating buttons --><!-- Floating Buttons -->
+<button class="float-inquiry float-chat" onclick="openChat()" title="在线咨询">
+  <span class="fi-icon">💬</span>咨询
 </button>
 
-<!-- AI选岗助手按钮 -->
-<button class="float-inquiry" onclick="toggleAiPanel()" style="background:linear-gradient(135deg,#667eea,#764ba2);bottom:24px;animation-name:none">
-  🤖 AI选岗
+<button class="float-inquiry float-ai" onclick="toggleAiPanel()" title="AI选岗">
+  <span class="fi-icon">🤖</span>AI选岗
 </button>
 
 <!-- AI选岗面板 -->
