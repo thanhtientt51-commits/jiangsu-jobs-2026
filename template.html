@@ -282,11 +282,7 @@ tr.expanded td{background:#f0f4ff}
     <span>🤖 AI选岗助手</span>
     <button onclick="toggleAiPanel()" style="background:0;border:0;color:#fff;font-size:1.2em;cursor:pointer">✕</button>
   </div>
-  <iframe id="aiIframe" src="https://doubao.com/bot/NT4bNDCx" frameborder="0" allow="clipboard-write"></iframe>
-  <div id="aiFallback" style="display:none;text-align:center;padding:40px 20px;color:var(--text-secondary)">
-    <p style="margin-bottom:16px">豆包未能在面板中加载</p>
-    <button class="btn btn-primary" onclick="window.open('https://doubao.com/bot/NT4bNDCx','_blank')">🔗 在新窗口打开豆包</button>
-  </div>
+  <iframe src="https://doubao.com/bot/NT4bNDCx" frameborder="0" allow="clipboard-write"></iframe>
 </div>
 
 <!-- WeChat Modal -->
@@ -667,17 +663,7 @@ function showWechat(){document.getElementById('wxModal').classList.add('show');}
 function hideWechat(){document.getElementById('wxModal').classList.remove('show');}
 function copyWechat(){navigator.clipboard.writeText('KOl_Rabbit').then(()=>{alert('微信号已复制：KOl_Rabbit\n\n打开微信添加好友即可');hideWechat();}).catch(()=>{prompt('请手动复制微信号：','KOl_Rabbit');});}
 function openChat(){if(window._MEIQIA){_MEIQIA('showPanel');}else{showWechat();}}
-function toggleAiPanel(){
-  var p=document.getElementById('aiPanel');
-  p.classList.toggle('open');
-  if(p.classList.contains('open')){
-    setTimeout(function(){
-      var iframe=document.getElementById('aiIframe');
-      try{var doc=iframe.contentDocument||iframe.contentWindow.document;if(!doc||!doc.body||doc.body.innerHTML.length<50){document.getElementById('aiFallback').style.display='flex';}}
-      catch(e){document.getElementById('aiFallback').style.display='flex';}
-    },3000);
-  }
-}
+function toggleAiPanel(){document.getElementById('aiPanel').classList.toggle('open');}
 
 window.addEventListener('DOMContentLoaded',()=>{
   if(!ALL_DATA||!ALL_DATA.length){document.getElementById('loadingMsg').innerHTML='<div class="empty">数据加载失败</div>';return;}
