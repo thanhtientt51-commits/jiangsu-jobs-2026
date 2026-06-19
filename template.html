@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8"><meta http-equiv="X-Frame-Options" content="SAMEORIGIN"><meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>江苏省2026年度公职招录 — 职位筛选系统</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -666,5 +666,5 @@ window.addEventListener('DOMContentLoaded',()=>{
 window.addEventListener('hashchange',()=>{loadHash();render();});
 document.addEventListener('click',e=>{if(window.innerWidth<=768&&!e.target.closest('.sidebar')&&!e.target.closest('.filter-toggle'))document.getElementById('sidebar').classList.remove('open');});
 </script>
-</body>
+<script>(function(){var s=0,d=Date.now();document.addEventListener("mousemove",function(){s++});document.addEventListener("keydown",function(){s++});setTimeout(function(){if(s===0&&Date.now()-d>3000){document.body.innerHTML="<h1 style=text-align:center;padding:100px;color:#999>检测到异常访问，请使用正常浏览器打开</h1>"}},4000)})()</script></body>
 </html>
